@@ -73,6 +73,7 @@ while(1)
         msgno=msgno+1;
         msgno
 %         if msgno == 249
+        
         [loc,err,antsV,sInfo]=computeLocation(toas, foas, CNRs, SIDs);
         if length(antsV)>1 && ~all(antsV)
             %purge
@@ -90,18 +91,18 @@ while(1)
         end
         if any(antsV)
             mtoa=mean(sInfo.upTOA);
-            if ~isempty(loc)
+            if ~isempty(loc) && nos >=3
                 str=sit145(msgno,msg,mtoa,mtoa,CNRs,SIDs,ants,loc,err);               
                 % archive solution  data for commissioning purpose
                 noB=1;%single bust solution
                 noP=length(ants);
                 noS=noP;                
-%                 archiveSdata(msgnoS,msg,id,mtoa,mtoa,SIDs,ants,loc,err,sInfo,noB,noP,noS,wrtS);
-%                 msgnoS = msgnoS + 1;                
+                archiveSdata(msgnoS,msg,id,mtoa,mtoa,SIDs,ants,loc,err,sInfo,noB,noP,noS,wrtS);
+                msgnoS = msgnoS + 1;                
             else
                 str=sit142(msgno,msg,mtoa,mtoa,CNRs,SIDs,ants);
             end
-            %wrt.write(str);
+            wrt.write(str);
             % archive beacon detection data for commissioning purpose
             archiveBdata(msgnoB,tmstamps,id,msgs,CNRs,SIDs,pdf1errs,pdf2errs,brates,ants,sInfo,wrtB);
             msgnoB = msgnoB+noP;  

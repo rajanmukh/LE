@@ -27,8 +27,11 @@ fd=getDoppler(posS1,velS1,BANGALORE,fc);
 sInfo.foff=fd;
 fc1=fc-fd-freq_trns;
 sInfo.upFOA=fc1;
-noOfSats=length(unique(satIDs));
-if noOfSats>=3    
+noOfSats=length(satIDs);
+if noOfSats == 2
+    fgff=0;
+end
+if noOfSats>=2    
     G=firstGuess(posS,t);
     G(5)=mean(fc1);
     for i=1:15
@@ -42,15 +45,19 @@ if noOfSats>=3
         G=G-del;
     end
     resd = norm(F);
-    if resd>100
+
+    freqOutOfBounds = G(5)<406.01e6 || G(5)>406.09e6;    
+
+    if resd>100 || freqOutOfBounds       
         errorDetected=true;        
         %try to identify wrong channel
 %         [~,tryOrder] = sort(abs(F(1:noOfChns)),'descend');
         [G,D,antsV,errorEliminated] = tryElimination(satIDs,posS,t,posS1,velS1,fc1,stdtoa,stdfoa);        
-    else
+    else        
         errorDetected=false;
         antsV=ones(1,noOfChns,'logical');
     end
+
     if ~errorDetected || (errorDetected && errorEliminated)
         location_est=G(1:3);
         % t(:)=G(4);
@@ -63,6 +70,7 @@ if noOfSats>=3
         loc.alt=llaPos(3)/1e3;
         [jdop,elp]=computeDOP(D,loc.lat*pi/180,loc.lon*pi/180);
         err.EHE = 2.5*jdop;
+        
         err.ellipse=elp;
         if errorDetected
             stdtoa = stdtoa(antsV);
@@ -155,7 +163,7 @@ D(1:length(t),4)=1e-3*LIGHTSPEED;
 end
 
 function [F,D] = FDcreator2(posS,t,posS1,velS1,freq,G,stdtoa,stdfoa,noOfSats)
-if noOfSats == 3
+if noOfSats == 3 || noOfSats == 2
     [F1,D1]=FDcreator1(posS,t,G(1:4));
     stdtoa=[stdtoa;0.5];
 else
