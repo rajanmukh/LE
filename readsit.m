@@ -1,14 +1,10 @@
 %% Import data from text file.
 coldate=[7,7,23];
-
+dec1 = comm.BCHDecoder(82,61);
 %% Initialize variables.
 filename = ['sit_',num2str(coldate(3)),'_',num2str(coldate(2),'%02d'),'_',num2str(coldate(1),'%02d'),'.txt'];
-id='347C000000FFBFF';
+ID='3476759F3F81FE0';
 bloc=[13.0342,77.5124];
-% bdata=extractBetween("FFFE2FCE3000000000000DBD0Exxxxxxxxxx",7,26);
-% bloc=[43.5605,1.4808];
-% bdata=extractBetween("FFFE2F4E3FF6155669AC86E79580",7,26);
-% bloc=[-49.3515,70.256];
 delimiter = {''};
 
 %% Format for each line of text:
@@ -36,41 +32,53 @@ TOA_LE=zeros(1,10000);
 lat=zeros(1,10000);
 lon=zeros(1,10000);
 offdist=zeros(1,10000);
+n1=0;
+n2=0;
 
 while i<=length(lines)
     if startsWith(lines(i),"/145/")
-        temp1=split(lines(i+2),'/');
-        d20=extractBetween(temp1(4),7,26);
-        if strcmp(d20,bdata)
-            %read toa
-            readtoa=temp1(2);
-            yy=str2double(extractBefore(readtoa,3));
-            ddd=str2double(extractBetween(readtoa,4,7));
-            hh=str2double(extractBetween(readtoa,8,9));
-            mm=str2double(extractBetween(readtoa,10,11));
-            ss=str2double(extractAfter(readtoa,12));
-            TOA_LE(j)=[ddd hh mm ss]*mult;
-            %read location
-            temp2=split(lines(i+3),'/');
-            lat(j)=str2double(temp2(3));
-            lon(j)=str2double(temp2(4));
-            offdist(j)=distance(lat(j),lon(j),bloc(1),bloc(2),referenceEllipsoid('WGS84'))/1e3;
-            j=j+1;
-            %
-            
-        end
+%         line4=split(lines(i+2),'/');
+%         noB = str2double(line4(3));
+%         id=decodeMsg(char(line4(4)),dec1);   
+        n1=n1+1;
         i=i+9;
     elseif startsWith(lines(i),"/142/")
+        n2=n2+1;
         i=i+8;
     else
         i=i+1;
     end
 end
-TOA_LE(j:end)=[];
-lat(j:end)=[];
-lon(j:end)=[];
-offdist(j:end)=[];
-% offdist=distance(lat,lon,13.0342,77.5124,referenceEllipsoid('WGS84'))/1e3
+n=n1+n2;
+id=char(zeros(15,n));
+noB=zeros(1,n);
+avtoa1=repmat(datetime,n);
+avtoa2=repmat(datetime,n);
+noChns=zeros(1,n);
+
+i=1;
+j=1;
+while i<=length(lines)
+    if startsWith(lines(i),"/145/")
+        line4=split(lines(i+2),'/');
+        noB(j) = str2double(line4(3));
+        id(:,j)=decodeMsg(char(line4(4)),dec1)';  
+        line6 = split(lines(i+4),'/');
+        noChns(j)=str2double(line6(4));
+        i=i+9;
+        j=j+1;
+    elseif startsWith(lines(i),"/142/")
+        line4=split(lines(i+2),'/');
+        noB(j) = 1;
+        id(:,j)=decodeMsg(char(line4(4)),dec1)'; 
+        line5 = split(lines(i+3),'/');
+        noChns(j)=str2double(line5(4));
+        i=i+8;
+        j=j+1;
+    else
+        i=i+1;
+    end
+end
 
 %% Post processing for unimportable data.
 % No unimportable data rules were applied during the import, so no post

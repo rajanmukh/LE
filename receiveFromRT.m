@@ -7,6 +7,7 @@ if ~exist('initialized','var')
 end
 warning('off','MATLAB:nearlySingularMatrix')
 warning('off','MATLAB:rankDeficientMatrix')
+warning('off','MATLAB:hex2dec:InputExceedsFlintmax')
 if exist('rx','var')
     rx.close()
     wrt.close()
