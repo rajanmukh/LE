@@ -28,9 +28,6 @@ sInfo.foff=fd;
 fc1=fc-fd-freq_trns;
 sInfo.upFOA=fc1;
 noOfSats=length(satIDs);
-if noOfSats == 2
-    fgff=0;
-end
 if noOfSats>=2    
     G=firstGuess(posS,t);
     G(5)=mean(fc1);

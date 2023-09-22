@@ -12,10 +12,7 @@ for i=1:100
     noB=bWrt(i);
 
     lagSeconds=seconds(currTime - groupTOA(i));
-    if lagSeconds > 110
-        if noB>4
-            gfg=0;
-        end
+    if lagSeconds > 600
         if noB > 1
             %count the total no of packet in all the burst having
             %individual location solution
@@ -96,7 +93,7 @@ for i=1:100
                 noS=length(uSIDs);
                 id=idlist{i};
                 msg=msglist{i};
-                str=sit145(msgno,msg,toa1,toa2,CNRs,uSIDs,uAnts,loc,err);
+                str=sit145(msgno,msg,toa1,toa2,noB,CNRs,uSIDs,uAnts,loc,err);
                 wrt.write(str);
                 msgno=msgno+1;
 

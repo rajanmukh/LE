@@ -1,5 +1,19 @@
 clpath=pwd;%'C:\Users\Istrac\Downloads\18.05.23\Loc_Est\LE';
-javaclasspath([clpath,'\javaclasses']);
+if ~exist('initialized','var')
+    addpath([clpath,'\sgp4']);
+    javaclasspath([clpath,'\javaclasses']);  
+    
+    initialized = true;
+end
+warning('off','MATLAB:nearlySingularMatrix')
+warning('off','MATLAB:rankDeficientMatrix')
+if exist('rx','var')
+    rx.close()
+    wrt.close()
+    wrtB.close()
+    wrtS.close()
+    pause(1)
+end
 load('prns.mat')
 present_hour = 0;
 prev_hour = 0;
@@ -91,8 +105,9 @@ while(1)
         end
         if any(antsV)
             mtoa=mean(sInfo.upTOA);
-            if ~isempty(loc) && nos >=3
-                str=sit145(msgno,msg,mtoa,mtoa,CNRs,SIDs,ants,loc,err);               
+            if ~isempty(loc) && nos >=2
+                noB=1;
+                str=sit145(msgno,msg,mtoa,mtoa,noB,CNRs,SIDs,ants,loc,err);               
                 % archive solution  data for commissioning purpose
                 noB=1;%single bust solution
                 noP=length(ants);

@@ -1,4 +1,4 @@
-function str = sit145(msgno,msg,toa1,toa2,CNRgroups,SIDgroup,ants,loc,err)
+function str = sit145(msgno,msg,toa1,toa2,noB,CNRgroups,SIDgroup,ants,loc,err)
 reptfaclity='4195';
 msgtt = char(datetime('now','format','yy DDD HHmm'));
 line1 = ['/',num2str(msgno,'%05d'),' ','00000','/',reptfaclity,'/',msgtt];
@@ -12,11 +12,11 @@ if length(hexmsg)<36
 end
 toa2.Format='yy DDD HHmm ss.SS';
 avtoa2=char(toa2);
-line4=['/',avtoa2,'/01/',hexmsg];
+line4=['/',avtoa2,'/',num2str(noB,'%02d'),'/',hexmsg];
 latstr=num2str(loc.lat,'%+06.3f');
 lonstr=num2str(loc.lon,'%+07.3f');
 qf=QF(err.EHE);
-line5=['/+419/',latstr,'/',lonstr,'/',num2str(qf,'%3d'),'/',num2str(err.EHE,'%6.2f')];
+line5=['/+419/',latstr,'/',lonstr,'/',num2str(qf,'%03d'),'/',num2str(err.EHE,'%06.2f')];
 avcnr=num2str(10*log10(mean(10.^(CNRgroups/10))),'%05.2f');
 nwchns='00';
 noOfantChannels=length(ants);
