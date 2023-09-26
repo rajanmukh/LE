@@ -1,3 +1,4 @@
+close all
 coldate=[7,7,23];
 filename = ['commissioning\Bdata\Log\','sit_',num2str(coldate(3)),'_',num2str(coldate(2),'%02d'),'_',num2str(coldate(1),'%02d'),'.txt'];
 lat0 = 13.036;
@@ -6,7 +7,7 @@ h0 = 930;
 wgs84 = wgs84Ellipsoid('kilometers');
 LUTxyz=lla2ecef([lat0,lon0,h0])'*1e-3;
 
-fbias=-13;
+fbias=-13.5;
 
 
 
@@ -20,6 +21,7 @@ clear dataarr
 noOfLines = length(lines);
 
 bID = cell(1,noOfLines);
+msg = cell(1,noOfLines);
 foa = zeros(1,noOfLines);
 foff = zeros(1,noOfLines);
 toa= repmat(datetime,1,noOfLines);
@@ -36,6 +38,7 @@ ferror = zeros(1,noOfLines);
 
 for i=1:noOfLines
     fields = split(lines{i},',');
+    msg{i}=fields{2};
     bID{i}=fields{3};
     foa(i) = str2double(fields{5})-fbias;
     foff(i) = str2double(fields{6});
@@ -60,13 +63,17 @@ end
 % ID='3476759F3F81FE0';%india
 % pos=[13.036,77.5124,930];
 % refFreq = 406.028000e6;
-ID = '3ADE22223F81FE0';%uae
-pos=[24.431,54.448,5];BRT=50;
-refFreq = 406.043000e6;
+% ID = '3ADE22223F81FE0';%uae
+% pos=[24.431,54.448,5];BRT=50;
+% refFreq = 406.043000e6;
+ID = '9C6000000000001';%T-cal
+pos=[43.5605,1.4808,214.27];BRT=30;
+refFreq = 406.022000e6;
 
 refLoc=lla2ecef(pos)'*1e-3;
 
 idmatch = strcmp(bID,ID);
+msgB = msg(idmatch);
 toaB=toa(idmatch);
 foaB=foa(idmatch);
 antB=antNo(idmatch);
