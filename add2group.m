@@ -23,8 +23,10 @@ for i=1:100
         if hexID == groupID(i)
             if type==fsynctype(i)
                 %addto the existing group
-                matchfound = true;
-                bnum=bnum+1;
+                matchfound = true;                
+                if bnum < 25 % this resticts the array size to 25
+                    bnum=bnum+1;
+                end
                 groupbuffer{1,bnum,i}=toas;
                 groupbuffer{2,bnum,i}=foas;
                 groupbuffer{3,bnum,i}=CNRs;
