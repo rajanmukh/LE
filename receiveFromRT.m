@@ -69,12 +69,12 @@ while(1)
         pdf1errs{i}=char(ss(ii+11));
         pdf2errs{i}=char(ss(ii+12));
         toa = ss(ii+13:ii+20);
-        TOA=[num2str(str2double(toa(1))+2000),'-',num2str(str2double(toa(2)),'%02d'),' ',num2str(str2double(toa(3)),'%02d'),':',num2str(str2double(toa(4)),'%02d'),':',num2str(str2double(toa(5)),'%02d'),':',num2str(str2double(toa(6)),'%03d'),num2str(str2double(toa(7)),'%03d'),num2str(str2double(toa(8)),'%03d')];
+        TOA=[num2str(str2double(toa(1))+2000),'-',num2str(str2double(toa(2)),'%03d'),' ',num2str(str2double(toa(3)),'%02d'),':',num2str(str2double(toa(4)),'%02d'),':',num2str(str2double(toa(5)),'%02d'),':',num2str(str2double(toa(6)),'%03d'),num2str(str2double(toa(7)),'%03d'),num2str(str2double(toa(8)),'%03d')];
         toas(i) = datetime(TOA,'InputFormat','uuuu-DDD HH:mm:ss:SSSSSSSSS'); 
         present_hour = str2double(toa(3));
         present_day = str2double(toa(2));
         if present_hour ~= prev_hour
-            readtle();
+            readtle(toas(i));
         end
         if present_day ~= prev_day
             msgno=0;
@@ -106,12 +106,11 @@ while(1)
         end
         if any(antsV)
             mtoa=mean(sInfo.upTOA);
+            noP=length(ants);
             if ~isempty(loc) && nos >=2
                 noB=1;
                 str=sit145(msgno,msg,mtoa,mtoa,noB,CNRs,SIDs,ants,loc,err);               
                 % archive solution  data for commissioning purpose
-                noB=1;%single bust solution
-                noP=length(ants);
                 noS=noP;                
                 archiveSdata(msgnoS,msg,id,mtoa,mtoa,SIDs,ants,loc,err,sInfo,noB,noP,noS,wrtS);
                 msgnoS = msgnoS + 1;                

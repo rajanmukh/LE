@@ -1,4 +1,4 @@
-coldate=[12,8,23];
+coldate=[25,9,23];
 filename = ['commissioning\Sdata\Log\','sit_',num2str(coldate(3)),'_',num2str(coldate(2),'%02d'),'_',num2str(coldate(1),'%02d'),'.txt'];
 fileID=fopen(filename);
 dataarr=textscan(fileID,'%s%[^\n\r]','Delimiter','');

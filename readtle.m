@@ -1,4 +1,4 @@
-function readtle()
+function readtle(dtime)
 opsmode='a';
 typerun='m';
 typeinput='m';
@@ -8,11 +8,13 @@ list=cell(1,300);
 load('prns.mat','prns');
 files=dir('TLE');
 if ~isempty(files)
+%     infile=-1;
+    dtime.Format = 'DDD_uuuu';
+    infilename=strcat(['tle_',char(dtime)]);
+    infile = fopen(infilename, 'r');
     i=1;
-    infile=-1;
-    while i<=length(files)
-        infilename = strcat('TLE\',files(i).name);
-        % infilename=strcat('gnss_tle.txt');
+    while i<=length(files) && infile < 0
+        infilename = strcat('TLE\',files(i).name);        
         if isfile(infilename)
             infile = fopen(infilename, 'r');
             break;
