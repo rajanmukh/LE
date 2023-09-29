@@ -1,4 +1,4 @@
-coldate=[25,9,23];
+coldate=[17,9,23];
 filename = ['commissioning\Sdata\Log\','sit_',num2str(coldate(3)),'_',num2str(coldate(2),'%02d'),'_',num2str(coldate(1),'%02d'),'.txt'];
 fileID=fopen(filename);
 dataarr=textscan(fileID,'%s%[^\n\r]','Delimiter','');
@@ -34,3 +34,6 @@ for i=1:noOfLines
     alt(i) = str2double(fields{20});
     locerr(i) = str2double(fields{21});
 end
+id = '3476759F3F81FE0';
+[PrLocS,PrLocM,prc5km,prc10km,predAcc]=solStat(id,bID,noP,noB,locerr,EHE,avtoa1,avtoa2);
+

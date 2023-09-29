@@ -12,9 +12,10 @@ for i=2:noofPackets
 end
 noOfBursts =j;
 chns(noOfBursts+1:end,:)=[];
-mfnd=max(chns,[],2);
-compactor=(mfnd>0);
+maxval=max(chns,[],2);
+compactor=(maxval>0);
 chns1=chns(compactor,:);
+compactor(maxval==0)=[];
 t=toaB(compactor);
 end
 

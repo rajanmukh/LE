@@ -12,7 +12,7 @@ for i=1:100
     noB=bWrt(i);
 
     lagSeconds=seconds(currTime - groupTOA(i));
-    if lagSeconds > 600
+    if lagSeconds > 560
         if noB > 1
             %count the total no of packet in all the burst having
             %individual location solution
