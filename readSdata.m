@@ -1,4 +1,4 @@
-coldate=[17,9,23];
+coldate=[23,9,23];
 filename = ['commissioning\Sdata\Log\','sit_',num2str(coldate(3)),'_',num2str(coldate(2),'%02d'),'_',num2str(coldate(1),'%02d'),'.txt'];
 fileID=fopen(filename);
 dataarr=textscan(fileID,'%s%[^\n\r]','Delimiter','');
@@ -14,6 +14,7 @@ noP = zeros(1,noOfLines);
 noS = zeros(1,noOfLines);
 JDOP = zeros(1,noOfLines);
 EHE = zeros(1,noOfLines);
+solMethod = zeros(1,noOfLines);
 lat = zeros(1,noOfLines);
 lon = zeros(1,noOfLines);
 alt = zeros(1,noOfLines);
@@ -29,11 +30,19 @@ for i=1:noOfLines
     noS(i) = str2double(fields{13});
     JDOP(i) = str2double(fields{15});
     EHE(i) = str2double(fields{16});
+    if contains(fields{17},'Average')
+        solMethod(i) = 1;
+    else
+        solMethod(i) = 2;
+    end
     lat(i) = str2double(fields{18});
     lon(i) = str2double(fields{19});
     alt(i) = str2double(fields{20});
     locerr(i) = str2double(fields{21});
 end
-id = '3476759F3F81FE0';
-[PrLocS,PrLocM,prc5km,prc10km,predAcc]=solStat(id,bID,noP,noB,locerr,EHE,avtoa1,avtoa2);
+close all
+ID = '347C000000FFBFF'; BRT = 50;refLoc=[13.036,77.511];%india
+% ID = '3ADEA2223F81FE0';BRT = 50;%uae
+% ID = '467C000002FFBFF'; BRT = 50;%singapore
+[PrLoc,accPerc,predAcc,H]=solStat(ID,bID,noP,noB,lat,lon,locerr,EHE,solMethod,avtoa1,avtoa2,BRT,refLoc);
 

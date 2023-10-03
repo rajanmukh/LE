@@ -33,7 +33,7 @@ if noOfSats>=2
     G(5)=mean(fc1);
     for i=1:15
         %     [posS1,dt2]=actualtof2(posS,G(1:3));
-        [F,D]=FDcreator2(posS,t,posS1,velS1,fc1,G,stdtoa,stdfoa,noOfSats);
+        [F,D]=FDcreatorTD(posS,t,posS1,velS1,fc1,G,stdtoa,stdfoa,noOfSats);
         %     [F,D]=FDcreator3(posS1,velS1,fc1,G);
         %     [F,D]=FDcreator1(posS,t,G);
         del=D\F;
@@ -159,7 +159,7 @@ D(1+length(t),1:3)=((1./R(1+length(t))).*xyz)';
 D(1:length(t),4)=1e-3*LIGHTSPEED;
 end
 
-function [F,D] = FDcreator2(posS,t,posS1,velS1,freq,G,stdtoa,stdfoa,noOfSats)
+function [F,D] = FDcreatorTD(posS,t,posS1,velS1,freq,G,stdtoa,stdfoa,noOfSats)
 if noOfSats == 3 || noOfSats == 2
     [F1,D1]=FDcreator1(posS,t,G(1:4));
     stdtoa=[stdtoa;0.5];
@@ -171,6 +171,17 @@ F=[F1./stdtoa;F2./stdfoa];
 D=zeros(length(F),5);
 D(1:length(F1),1:4)=D1./stdtoa;
 D(length(F1)+1:length(F),[1:3,5])=D2./stdfoa;
+end
+
+function [F,D] = FDcreatorT(posS,t,posS1,velS1,freq,G,stdtoa,stdfoa,noOfSats)
+if noOfSats == 3 || noOfSats == 2
+    [F1,D1]=FDcreator1(posS,t,G(1:4));
+    stdtoa=[stdtoa;0.5];
+else
+    [F1,D1]=FDcreator(posS,t,G(1:4));
+end
+F=F1./stdtoa;
+D=D1./stdtoa;
 end
 
 function [F,D] = FDcreator3(posS,velS,freq,G)

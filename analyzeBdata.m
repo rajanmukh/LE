@@ -1,6 +1,6 @@
-function analyzeBdata(ID,pos,refFreq,BRT,bID,foa,toa,CNR,antNo,SIDa,pXYZ,vXYZ)
+function h=analyzeBdata(ID,pos,refFreq,BRT,bID,foa,foff,toa,CNR,antNo,SIDa,pXYZ,vXYZ)
 % close all
-
+load('prns.mat','prns')
 load('clrs.mat','clrs')
 
 lat0 = 13.036;
@@ -13,6 +13,7 @@ refLoc=lla2ecef(pos)'*1e-3;
 idmatch = strcmp(bID,ID);
 toaB=toa(idmatch);
 foaB=foa(idmatch);
+foffB=foff(idmatch);
 antB=antNo(idmatch);
 SIDb=SIDa(idmatch);
 CNRb=CNR(idmatch);
@@ -25,38 +26,59 @@ end
 [eld,nadd,rd]=getAngles(pXYZb,LUTxyz);
 [elu,nadu,ru]=getAngles(pXYZb,refLoc);
 
-fd1 = getDoppler(pXYZb,vXYZb,refLoc,foaB);
-ftB = foaB - fd1;
+fdu = getDoppler(pXYZb,vXYZb,refLoc,foaB);
+ftB = foaB - fdu;
 dt = tof(pXYZb,refLoc);
 ttB = toaB - dt/86400;
 
-
-figure
+h=gobjects(1,15);
+h(15)=figure;
+histogram(toaB,144);
+h(1)=figure;
 for i=1:7
     sel=antB==i;
     t1=toaB(sel);
+    if isempty(t1)
+        continue;
+    end
     f1=ftB(sel);
     s1=SIDb(sel);
-    
+    fdu1 = fdu(sel);
+    fdd1 = foffB(sel);
     inds=s1(1:end-1) ~= s1(2:end);
-    st=[1,find(inds)+1,length(t1)+1];
-    noofSegs1=length(st)-1;
+    en=[find(inds),length(t1)];
+    st=[1,en(1:end-1)+1];
+    noofSegs1=length(en);
     subplot(7,1,i)
+    ax=gca;
     hold on
     for j=1:noofSegs1
-        sel1=st(j):st(j+1)-1;
-        ferr=f1(sel1)-refFreq;        
-        stem(t1(sel1),ferr,'Marker','.','Color',clrs(s1(st(j)),:))
-    end    
-    text(toaB(end),1,['rms= ',num2str(rms(ferr))])
+        sel1=st(j):en(j);
+        ferr=f1(sel1)-refFreq;   
+        satid=s1(st(j));
+        pltcolor=clrs(satid,:);
+        stem(t1(sel1),ferr,'Marker','.','Color',pltcolor)
+        text(t1(sel1(1)),2+mod(j,2),getSatName(satid,prns))
+    end   
+   
+    text(toaB(end)+1/24,1,['rms= ',num2str(rms(ferr),'%3.1f')])
+    ylim([-2 2])
+    ylabel(['FOA err(Hz) ',num2str(i)])
+    yyaxis right
+    plot(t1,fdu1,'LineStyle','--','Color','black')
+    plot(t1,fdd1,'LineStyle','-','Color','black')
+    ylim([-3e3 3e3])
+    ylabel('Doppler(Hz)','Color','black')   
+    ax.YColor = 'black';
     xlim([toaB(1),toaB(end)])
-    ylim([-1.5 1.5])
-    ylabel(['FOA error(Hz) ch',num2str(i)])
 end
 
 for i=1:7
     sel=antB==i;
     t1=toaB(sel);
+    if isempty(t1)
+        continue;
+    end
     s1=SIDb(sel);
     cnr1=CNRb(sel);
     elu1=elu(sel);
@@ -67,13 +89,15 @@ for i=1:7
     rd1=rd(sel);
     
     inds=s1(1:end-1) ~= s1(2:end);
-    st=[1,find(inds)+1,length(t1)+1];
-    noofSegs1=length(st)-1;
-    figure
+    en=[find(inds),length(t1)];
+    st=[1,en(1:end-1)+1];
+    noofSegs1=length(en);
+    h(i+1)=figure;
     
     for j=1:noofSegs1        
-        sel1=st(j):st(j+1)-1;
-        pltcolor=clrs(s1(st(j)),:);
+        sel1=st(j):en(j);
+        satid=s1(st(j));
+        pltcolor=clrs(satid,:);
         subplot(5,1,1)
         title(['chanel ',num2str(i)]) 
         hold on
@@ -116,6 +140,9 @@ end
 k=1;
 h1=figure('Name','TDOA error -various pairs');
 h2=figure('Name','FDOA error -various pairs');title('FDOA error -various pairs')
+h(9)=h1;
+h(10)=h2;
+m=0;
 for i=1:7
     for j=i+1:7
         [tderr,fderr,t]=findTDOA(ttB,ftB,chns,i,j);
@@ -123,6 +150,9 @@ for i=1:7
             k=1;
             h1=figure('Name','TDOA error -various pairs');
             h2=figure('Name','FDOA error -various pairs');
+            h(11+m)=h1;
+            h(12+m)=h2;
+            m=m+2;
         end
         figure(h1);
         subplot(7,1,k)
@@ -140,8 +170,17 @@ for i=1:7
         ylabel(['FDOA-',num2str(i),num2str(j)])
         k=k+1;
     end
+end   
+
 end
 
-
+function satname = getSatName(sid,list)
+satname='';
+d=find(list==sid);
+if sid>500
+    satname = ['COSMOS 25',num2str(d,'%02d')];
+elseif sid>400
+    satname = ['GSAT0',num2str(d)];
+end
 end
 

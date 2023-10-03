@@ -6,22 +6,14 @@ whichconst=84;
 global list;
 list=cell(1,300);
 load('prns.mat','prns');
-files=dir('TLE');
+files=dir('TLE\tle*');
 if ~isempty(files)
 %     infile=-1;
-    dtime.Format = 'DDD_uuuu';
-    infilename=strcat(['tle_',char(dtime)]);
-    infile = fopen(infilename, 'r');
-    i=1;
-    while i<=length(files) && infile < 0
-        infilename = strcat('TLE\',files(i).name);        
-        if isfile(infilename)
-            infile = fopen(infilename, 'r');
-            break;
-        else
-            i=i+1;
-        end
-    end
+    filenames = arrayfun(@(x) string(x.name(5:end)),files);
+    dtarr=datetime(filenames,'InputFormat','DDD_uuuu');
+    [~,ind]=min(abs(seconds(dtime-dtarr)));
+    infilename=['TLE\',files(ind).name];
+    infile = fopen(infilename, 'r');    
     if infile > 0
         while true
             longstr=fgets(infile);

@@ -145,6 +145,7 @@ else
 end
 SID=prnlist(idx);
 end
+
 function sInfo1 = purge(sInfo,antsV)
 sInfo1=sInfo;
 sInfo1.satPos = sInfo.satPos(:,antsV);
