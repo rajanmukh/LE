@@ -69,6 +69,9 @@ while(1)
         pdf1errs{i}=char(ss(ii+11));
         pdf2errs{i}=char(ss(ii+12));
         toa = ss(ii+13:ii+20);
+        if isempty(toa(8))
+            continue;
+        end
         TOA=[num2str(str2double(toa(1))+2000),'-',num2str(str2double(toa(2)),'%03d'),' ',num2str(str2double(toa(3)),'%02d'),':',num2str(str2double(toa(4)),'%02d'),':',num2str(str2double(toa(5)),'%02d'),':',num2str(str2double(toa(6)),'%03d'),num2str(str2double(toa(7)),'%03d'),num2str(str2double(toa(8)),'%03d')];
         toas(i) = datetime(TOA,'InputFormat','uuuu-DDD HH:mm:ss:SSSSSSSSS'); 
         present_hour = str2double(toa(3));

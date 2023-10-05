@@ -1,4 +1,4 @@
-function h=analyzeBdata(ID,pos,refFreq,BRT,bID,foa,foff,toa,CNR,antNo,SIDa,pXYZ,vXYZ)
+function [h,detstat]=analyzeBdata(ID,pos,refFreq,BRT,bID,foa,foff,toa,CNR,antNo,SIDa,pXYZ,vXYZ)
 % close all
 load('prns.mat','prns')
 load('clrs.mat','clrs')
@@ -33,7 +33,13 @@ ttB = toaB - dt/86400;
 
 h=gobjects(1,15);
 h(15)=figure;
-histogram(toaB,144);
+dh=histogram(toaB,144);
+detstat=sum(dh.Values>0)/144;
+hold on
+plot([toaB(1) toaB(end)],[1 1])
+text(toaB(end),1,num2str(detstat,'%4.2f'))
+ylabel('No of Packets(in 10 min window)')
+xlabel('time windows')
 h(1)=figure;
 for i=1:7
     sel=antB==i;
