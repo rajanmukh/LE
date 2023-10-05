@@ -37,6 +37,7 @@ dh=histogram(toaB,144);
 detstat=sum(dh.Values>0)/144;
 hold on
 plot([toaB(1) toaB(end)],[1 1])
+xlim([toaB(1),toaB(end)])
 text(toaB(end),1,num2str(detstat,'%4.2f'))
 ylabel('No of Packets(in 10 min window)')
 xlabel('time windows')
