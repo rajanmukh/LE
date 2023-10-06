@@ -9,17 +9,23 @@ tp1 = TitlePage();
 tp1.Title = 'INDIA';
 tp1.Author = 'ISTRAC';
 add(R1,tp1)
+toc1=TableOfContents;
+add(R1,toc1)
 R2=Report('UAE Beacon Statistics','docx');
 open(R2)
 tp2 = TitlePage();
 tp2.Title = 'UAE';
 tp2.Author = 'ISTRAC';
 add(R2,tp2)
+toc2=TableOfContents;
+add(R2,toc2)
 
 startDate = datetime('11-Sep-2023');
-detstat = zeros(2,2);
-for dno= 1:2
+bstat = cell(4,2,2);
+for dno= 1:1
     coldate = startDate+(dno-1)
+    
+    %%
     filename = ['commissioning\Bdata\Log\','sit_',num2str(coldate.Year-2000),'_',num2str(coldate.Month,'%02d'),'_',num2str(coldate.Day,'%02d'),'.txt'];
     
     fbias=-13;   
@@ -29,9 +35,9 @@ for dno= 1:2
     fclose(fileID);
     lines=dataarr{1};
     clear dataarr   
-    noOfLines = length(lines);
+    noOfLines = floor(length(lines)/20);
     
-    bID = cell(1,noOfLines);
+    bID_b = cell(1,noOfLines);
     msg = cell(1,noOfLines);
     foa = zeros(1,noOfLines);
     foff = zeros(1,noOfLines);
@@ -48,7 +54,7 @@ for dno= 1:2
     for i=1:noOfLines
         fields = split(lines{i},',');
         msg{i}=fields{2};
-        bID{i}=fields{3};
+        bID_b{i}=fields{3};
         foa(i) = str2double(fields{5})-fbias;
         foff(i) = str2double(fields{6});
         toa(i) = datetime(fields{7},'InputFormat','yyyy-MM-dd HH:mm:ss.SSSSSSSSS');
@@ -61,29 +67,209 @@ for dno= 1:2
         err1(i) = str2double(fields{19});
         err2(2) = str2double(fields{20});
     end
+    %%
+    filename = ['commissioning\Sdata\Log\','sit_',num2str(coldate.Year-2000),'_',num2str(coldate.Month,'%02d'),'_',num2str(coldate.Day,'%02d'),'.txt'];
+    fileID=fopen(filename);
+    dataarr=textscan(fileID,'%s%[^\n\r]','Delimiter','');
+    lines=dataarr{1};
+    clear dataarr
+    noOfLines = floor(length(lines)/20);
+    avtoa1=repmat(datetime,1,noOfLines);
+    avtoa2=repmat(datetime,1,noOfLines);
+    bID_s = cell(1,noOfLines);
+    ft = zeros(1,noOfLines);
+    noB = zeros(1,noOfLines);
+    noP = zeros(1,noOfLines);
+    noS = zeros(1,noOfLines);
+    JDOP = zeros(1,noOfLines);
+    EHE = zeros(1,noOfLines);
+    solMethod = zeros(1,noOfLines);
+    lat = zeros(1,noOfLines);
+    lon = zeros(1,noOfLines);
+    alt = zeros(1,noOfLines);
+    locerr = zeros(1,noOfLines);
+    for i=1:noOfLines
+        fields = split(lines{i},',');
+        avtoa1(i)=datetime(['20',fields{3}],'InputFormat','uuuu DDD HHmm ss.SS');
+        avtoa2(i)=datetime(['20',fields{4}],'InputFormat','uuuu DDD HHmm ss.SS');
+        bID_s{i} = fields{6};
+        ft(i) = str2double(fields{7});
+        noB(i) = str2double(fields{9});
+        noP(i) = str2double(fields{12});
+        noS(i) = str2double(fields{13});
+        JDOP(i) = str2double(fields{15});
+        EHE(i) = str2double(fields{16});
+        if contains(fields{17},'Average')
+            solMethod(i) = 1;
+        else
+            solMethod(i) = 2;
+        end
+        lat(i) = str2double(fields{18});
+        lon(i) = str2double(fields{19});
+        alt(i) = str2double(fields{20});
+        locerr(i) = str2double(fields{21});
+    end
+    %% 
+    coldate.Format='dd-MMM-yy';
     
     ID='347C000000FFBFF';%india
     pos=[13.036,77.5124,930];BRT=50;
     refFreq = 406.028000e6;
-    [H,detstat(1,dno)]=analyzeBdata(ID,pos,refFreq,BRT,bID,foa,foff,toa,CNR,antNo,SIDa,pXYZ,vXYZ);    
-    ch1=Chapter(char(coldate));
-    s11=Section('Probability of Detection');
-    add(s11,Figure(H(15)))
-    add(ch1,s11)
-    add(R1,ch1)
+    [Hb,detstat]=analyzeBdata(ID,pos,refFreq,BRT,bID_b,foa,foff,toa,CNR,antNo,SIDa,pXYZ,vXYZ);  
+    [PrLoc,accPerc,predAcc,Hs]=solStat(ID,bID_s,noP,noB,lat,lon,locerr,EHE,solMethod,avtoa1,avtoa2,BRT,pos(1:2));
+     bstat{1,1,dno}= detstat; bstat{2,1,dno}=PrLoc ;bstat{3,1,dno}= accPerc;bstat{4,1,dno}= predAcc;
     
-    close(H)
+    ch=Chapter(char(coldate));    
+    s1=Section('Probability of Detection');
+    add(s1,Figure(Hb(26)))
+    add(ch,s1)
+    s2=Section('CNR and look angles');
+    for kk=5:11
+        add(s2,Figure(Hb(kk)))
+    end    
+    add(ch,s2)
+    s3=Section('FOA error');
+    for kk=1:4
+        add(s3,Figure(Hb(1)))
+    end
+    add(ch,s3)
+    s4=Section('FDOA error');
+    for kk = 13:2:25
+        add(s4,Figure(Hb(kk)))
+    end  
+    add(ch,s4)
+    s5=Section('TDOA error');
+    for kk = 12:2:24
+        add(s5,Figure(Hb(kk)))
+    end  
+    add(ch,s5)
+    
+    s6=Section('Probability of Location');
+    add(s6,Figure(Hs(2)))
+    add(ch,s6)
+    s7=Section('Solution Accuracy and Error Prediction Accuracy');
+    add(s7,Figure(Hs(1)))
+    add(ch,s7)
+    s8=Section('Location Error Cumulative Distribution');
+    add(s8,Figure(Hs(3)))
+    add(s8,Figure(Hs(4)))
+    add(ch,s8)
+    s9=Section('Scatter Plot');
+    add(s9,Figure(Hs(5)))
+    add(s9,Figure(Hs(6)))
+    add(ch,s9)
+    
+    add(R1,ch)    
+    close(Hb)
+    close(Hs)
+    
+    
     ID = '3ADEA2223F81FE0';%uae
     pos=[24.431,54.448,5];BRT=50;
     refFreq = 406.043000e6;
-    [H,detstat(2,dno)]=analyzeBdata(ID,pos,refFreq,BRT,bID,foa,foff,toa,CNR,antNo,SIDa,pXYZ,vXYZ);    
-    ch2=Chapter(char(coldate));
-    s21=Section('Probability of Detection');
-    add(s21,Figure(H(15)))
-    add(ch2,s21)
-    add(R2,ch2)    
-    close(H)
+    [Hb,detstat]=analyzeBdata(ID,pos,refFreq,BRT,bID_b,foa,foff,toa,CNR,antNo,SIDa,pXYZ,vXYZ);  
+    [PrLoc,accPerc,predAcc,Hs]=solStat(ID,bID_s,noP,noB,lat,lon,locerr,EHE,solMethod,avtoa1,avtoa2,BRT,pos(1:2));
+    bstat{1,2,dno}= detstat; bstat{2,2,dno}=PrLoc ;bstat{3,2,dno}= accPerc;bstat{4,2,dno}= predAcc;
+    
+    ch=Chapter(char(coldate));    
+    s1=Section('Probability of Detection');
+    add(s1,Figure(Hb(26)))
+    add(ch,s1)
+    s2=Section('CNR and look angles');
+    for kk=5:11
+        add(s2,Figure(Hb(kk)))
+    end    
+    add(ch,s2)
+    s3=Section('FOA error');
+    for kk=1:4
+        add(s3,Figure(Hb(1)))
+    end
+    add(ch,s3)
+    s4=Section('FDOA error');
+    for kk = 13:2:25
+        add(s4,Figure(Hb(kk)))
+    end  
+    add(ch,s4)
+    s5=Section('TDOA error');
+    for kk = 12:2:24
+        add(s5,Figure(Hb(kk)))
+    end  
+    add(ch,s5)
+    s6=Section('Probability of Location');
+    add(s6,Figure(Hs(2)))
+    add(ch,s6)
+    s7=Section('Solution Accuracy and Error Prediction Accuracy');
+    add(s7,Figure(Hs(1)))
+    add(ch,s7)
+    s8=Section('Location Error Cumulative Distribution');
+    add(s8,Figure(Hs(3)))
+    add(s8,Figure(Hs(4)))
+    add(ch,s8)
+    s9=Section('Scatter Plot');
+    add(s9,Figure(Hs(5)))
+    add(s9,Figure(Hs(6)))
+    add(ch,s9)
+    
+    add(R2,ch)    
+    close(Hb)
+    close(Hs)
+    
+
 end
+
+cc(1,1:12)={'Date';'Detection Prob';'Loc Prob(Single)';'Loc Prob(Multi)';'AE<5km(single)';'AE<10km(single)';'AE<5km(Multi)';'AE<10km(Multi)';'AE/EHE<0.1';'AE/EHE<1';'AE/EHE>2';'Anomaly'};
+
+j=1;
+a=0;b=0;c=0;d=0;
+for dno= 1:1
+    coldate = startDate+(dno-1);
+    coldate.Format='dd-MMM-yy';
+    cc(1+dno,1)={char(coldate)};
+    detstat=bstat{1,j,dno};
+    a=a+detstat;
+    PrLoc=bstat{2,j,dno};
+    b=b+PrLoc;
+    accPerc=bstat{3,j,dno};
+    c=c+accPerc;
+    predAcc=bstat{4,j,dno};
+    d=d+predAcc;
+    cc(1+dno,2)={num2str(detstat,'%05.3f')};
+    cc(1+dno,3)={num2str(PrLoc(1),'%04.2f')};
+    cc(1+dno,4)={num2str(PrLoc(2),'%04.2f')};
+    cc(1+dno,5)={num2str(accPerc(1,1),'%04.2f')};
+    cc(1+dno,6)={num2str(accPerc(1,2),'%04.2f')};
+    cc(1+dno,7)={num2str(accPerc(2,1),'%04.2f')};
+    cc(1+dno,8)={num2str(accPerc(2,2),'%04.2f')};
+    cc(1+dno,9)={num2str(predAcc(1,2),'%04.2f')};
+    cc(1+dno,10)={num2str(predAcc(1,1),'%04.2f')};
+    cc(1+dno,11)={num2str(predAcc(1,3),'%04.2f')};
+    cc(1+dno,12)={'-'};
+end
+noOfDays=1;
+a=a/noOfDays;
+b=b/noOfDays;
+c=c/noOfDays;
+d=d/noOfDays;
+
+cc(2+dno,1)={'Overall'};
+cc(2+dno,2)={num2str(a,'%05.3f')};
+cc(2+dno,3)={num2str(b(1),'%04.2f')};
+cc(2+dno,4)={num2str(b(2),'%04.2f')};
+cc(2+dno,5)={num2str(c(1,1),'%04.2f')};
+cc(2+dno,6)={num2str(c(1,2),'%04.2f')};
+cc(2+dno,7)={num2str(c(2,1),'%04.2f')};
+cc(2+dno,8)={num2str(c(2,2),'%04.2f')};
+cc(2+dno,9)={num2str(d(1,2),'%04.2f')};
+cc(2+dno,10)={num2str(d(1,1),'%04.2f')};
+cc(2+dno,11)={num2str(d(1,3),'%04.2f')};
+cc(2+dno,12)={'-'};
+
+tb0=BaseTable(cc);
+ch0=Chapter('Summary');
+s00=Section('At a glance');
+add(s00,tb0)
+add(ch0,s00)
+add(R1,ch0)
 close(R1)
 close(R2)
 rptview(R1)

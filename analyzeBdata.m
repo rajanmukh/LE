@@ -31,18 +31,21 @@ ftB = foaB - fdu;
 dt = tof(pXYZb,refLoc);
 ttB = toaB - dt/86400;
 
-h=gobjects(1,15);
-h(15)=figure;
-dh=histogram(toaB,144);
-detstat=sum(dh.Values>0)/144;
+h=gobjects(1,26);
+h(26)=figure;
+noOf10minWnd = round(seconds(toaB(end)-toaB(1))/600);
+dh=histogram(toaB,noOf10minWnd);
+detstat=sum(dh.Values>0)/noOf10minWnd;
 hold on
 plot([toaB(1) toaB(end)],[1 1])
 xlim([toaB(1),toaB(end)])
 text(toaB(end),1,num2str(detstat,'%4.2f'))
 ylabel('No of Packets(in 10 min window)')
 xlabel('time windows')
-h(1)=figure;
 for i=1:7
+    if mod(i,2)==1
+       h(floor(i/2)+1)=figure ; 
+    end
     sel=antB==i;
     t1=toaB(sel);
     if isempty(t1)
@@ -56,7 +59,7 @@ for i=1:7
     en=[find(inds),length(t1)];
     st=[1,en(1:end-1)+1];
     noofSegs1=length(en);
-    subplot(7,1,i)
+    subplot(2,1,mod(i-1,2)+1)
     ax=gca;
     hold on
     for j=1:noofSegs1
@@ -72,8 +75,8 @@ for i=1:7
     ylim([-2 2])
     ylabel(['FOA err(Hz) ',num2str(i)])
     yyaxis right
-    plot(t1,fdu1,'LineStyle','--','Color','black')
-    plot(t1,fdd1,'LineStyle','-','Color','black')
+    plot(t1,fdu1,'LineStyle','--','Color','black','Marker','none')
+    plot(t1,fdd1,'LineStyle','-','Color','black','Marker','none')
     ylim([-3e3 3e3])
     ylabel('Doppler(Hz)','Color','black')   
     ax.YColor = 'black';
@@ -83,7 +86,9 @@ end
 for i=1:7
     sel=antB==i;
     t1=toaB(sel);
+    h(i+4)=figure;
     if isempty(t1)
+        plot([toaB(1),toaB(end)],[NaN NaN])
         continue;
     end
     s1=SIDb(sel);
@@ -98,8 +103,7 @@ for i=1:7
     inds=s1(1:end-1) ~= s1(2:end);
     en=[find(inds),length(t1)];
     st=[1,en(1:end-1)+1];
-    noofSegs1=length(en);
-    h(i+1)=figure;
+    noofSegs1=length(en);    
     
     for j=1:noofSegs1        
         sel1=st(j):en(j);
@@ -147,29 +151,29 @@ end
 k=1;
 h1=figure('Name','TDOA error -various pairs');
 h2=figure('Name','FDOA error -various pairs');title('FDOA error -various pairs')
-h(9)=h1;
-h(10)=h2;
+h(12)=h1;
+h(13)=h2;
 m=0;
 for i=1:7
     for j=i+1:7
         [tderr,fderr,t]=findTDOA(ttB,ftB,chns,i,j);
-        if k==8
+        if k==4
             k=1;
             h1=figure('Name','TDOA error -various pairs');
             h2=figure('Name','FDOA error -various pairs');
-            h(11+m)=h1;
-            h(12+m)=h2;
+            h(14+m)=h1;
+            h(15+m)=h2;
             m=m+2;
         end
         figure(h1);
-        subplot(7,1,k)
+        subplot(3,1,k)
         stem(t,tderr,'Marker','.')
         text(toaB(end),30,['rms= ',num2str(rms(tderr))])
         xlim([toaB(1),toaB(end)]);
         ylim([-50 50])
         ylabel(['TDOA-',num2str(i),num2str(j)])
         figure(h2);
-        subplot(7,1,k)
+        subplot(3,1,k)
         stem(t,fderr,'Marker','.')
         text(toaB(end),1,['rms= ',num2str(rms(fderr))])
         xlim([toaB(1),toaB(end)]);
