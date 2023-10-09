@@ -68,10 +68,10 @@ for i=1:7
         satid=s1(st(j));
         pltcolor=clrs(satid,:);
         stem(t1(sel1),ferr,'Marker','.','Color',pltcolor)
-        text(t1(sel1(1)),2+mod(j,2),getSatName(satid,prns))
+        text(t1(sel1(1)),1+mod(j,2),getSatName(satid,prns))
     end   
    
-    text(toaB(end)+1/24,1,['rms= ',num2str(rms(ferr),'%3.1f')])
+    text(toaB(end),1,['rms= ',num2str(rms(ferr),'%3.1f')])
     ylim([-2 2])
     ylabel(['FOA err(Hz) ',num2str(i)])
     yyaxis right
@@ -113,6 +113,7 @@ for i=1:7
         title(['chanel ',num2str(i)]) 
         hold on
         stem(t1(sel1),cnr1(sel1),'Marker','.','Color',pltcolor)
+        text(t1(sel1(1)),50+10*mod(j,2),getSatName(satid,prns))
         xlim([toaB(1),toaB(end)])
         ylim([0 50])
         ylabel('CNR(dB)')

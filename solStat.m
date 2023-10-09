@@ -1,4 +1,4 @@
-function [locProb,accPerc,predAcc,H]=solStat(id,bID,noP,noB,lat,lon,locerr,EHE,solMethod,toa1,toa2,BRT,refLoc)
+function [locProb,accPerc,predAcc,noOfSamples,H]=solStat(id,bID,noP,noB,lat,lon,locerr,EHE,solMethod,toa1,toa2,BRT,refLoc)
 %single burst
 idmatch = strcmp(id,bID);
 singleBurst = idmatch & noB == 1;
@@ -20,7 +20,7 @@ predAccS = [p1,po,pu];
 multiBurst = idmatch & noB > 1;
 idx2 = multiBurst;
 noOfSolM = sum(idx2);
-noOf10minWnd = ceil(timespan/600);
+noOf10minWnd = round(timespan/600)+1;
 PrLocM=noOfSolM/noOf10minWnd;
 prc5kmM = sum(locerr(idx2)<5)/sum(idx2);
 prc10kmM = sum(locerr(idx2)<10)/sum(idx2);
@@ -33,6 +33,7 @@ predAccM = [p1,po,pu];
 locProb = [PrLocS;PrLocM];
 accPerc = [prc5kmS,prc10kmS;prc5kmM,prc10kmM];
 predAcc = [predAccS;predAccM];
+noOfSamples = [noOfSolS;noOfSolM];
 
 H = gobjects(1,6);
 H(1)=figure('Name','accuracy');

@@ -6,7 +6,7 @@ import mlreportgen.dom.*
 R1=Report('India Beacon Statistics','docx');
 open(R1)
 tp1 = TitlePage();
-tp1.Title = 'INDIA';
+tp1.Title = 'INDIA BEACON';
 tp1.Author = 'ISTRAC';
 add(R1,tp1)
 toc1=TableOfContents;
@@ -14,15 +14,16 @@ add(R1,toc1)
 R2=Report('UAE Beacon Statistics','docx');
 open(R2)
 tp2 = TitlePage();
-tp2.Title = 'UAE';
+tp2.Title = 'UAE BEACON';
 tp2.Author = 'ISTRAC';
 add(R2,tp2)
 toc2=TableOfContents;
 add(R2,toc2)
 
 startDate = datetime('11-Sep-2023');
-bstat = cell(4,2,2);
-for dno= 1:1
+noOfDays = 3;
+bstat = cell(5,noOfDays,2);
+for dno= 1:noOfDays
     coldate = startDate+(dno-1)
     
     %%
@@ -35,7 +36,7 @@ for dno= 1:1
     fclose(fileID);
     lines=dataarr{1};
     clear dataarr   
-    noOfLines = floor(length(lines)/20);
+    noOfLines = floor(length(lines)/1);
     
     bID_b = cell(1,noOfLines);
     msg = cell(1,noOfLines);
@@ -73,7 +74,7 @@ for dno= 1:1
     dataarr=textscan(fileID,'%s%[^\n\r]','Delimiter','');
     lines=dataarr{1};
     clear dataarr
-    noOfLines = floor(length(lines)/20);
+    noOfLines = floor(length(lines)/1);
     avtoa1=repmat(datetime,1,noOfLines);
     avtoa2=repmat(datetime,1,noOfLines);
     bID_s = cell(1,noOfLines);
@@ -116,8 +117,8 @@ for dno= 1:1
     pos=[13.036,77.5124,930];BRT=50;
     refFreq = 406.028000e6;
     [Hb,detstat]=analyzeBdata(ID,pos,refFreq,BRT,bID_b,foa,foff,toa,CNR,antNo,SIDa,pXYZ,vXYZ);  
-    [PrLoc,accPerc,predAcc,Hs]=solStat(ID,bID_s,noP,noB,lat,lon,locerr,EHE,solMethod,avtoa1,avtoa2,BRT,pos(1:2));
-     bstat{1,1,dno}= detstat; bstat{2,1,dno}=PrLoc ;bstat{3,1,dno}= accPerc;bstat{4,1,dno}= predAcc;
+    [PrLoc,accPerc,predAcc,noOfSamples,Hs]=solStat(ID,bID_s,noP,noB,lat,lon,locerr,EHE,solMethod,avtoa1,avtoa2,BRT,pos(1:2));
+     bstat{1,1,dno}= detstat; bstat{2,1,dno}=PrLoc ;bstat{3,1,dno}= accPerc;bstat{4,1,dno}= predAcc;bstat{5,1,dno}= noOfSamples;
     
     ch=Chapter(char(coldate));    
     s1=Section('Probability of Detection');
@@ -130,7 +131,7 @@ for dno= 1:1
     add(ch,s2)
     s3=Section('FOA error');
     for kk=1:4
-        add(s3,Figure(Hb(1)))
+        add(s3,Figure(Hb(kk)))
     end
     add(ch,s3)
     s4=Section('FDOA error');
@@ -168,8 +169,8 @@ for dno= 1:1
     pos=[24.431,54.448,5];BRT=50;
     refFreq = 406.043000e6;
     [Hb,detstat]=analyzeBdata(ID,pos,refFreq,BRT,bID_b,foa,foff,toa,CNR,antNo,SIDa,pXYZ,vXYZ);  
-    [PrLoc,accPerc,predAcc,Hs]=solStat(ID,bID_s,noP,noB,lat,lon,locerr,EHE,solMethod,avtoa1,avtoa2,BRT,pos(1:2));
-    bstat{1,2,dno}= detstat; bstat{2,2,dno}=PrLoc ;bstat{3,2,dno}= accPerc;bstat{4,2,dno}= predAcc;
+    [PrLoc,accPerc,predAcc,noOfSamples,Hs]=solStat(ID,bID_s,noP,noB,lat,lon,locerr,EHE,solMethod,avtoa1,avtoa2,BRT,pos(1:2));
+    bstat{1,2,dno}= detstat; bstat{2,2,dno}=PrLoc ;bstat{3,2,dno}= accPerc;bstat{4,2,dno}= predAcc;bstat{5,2,dno}= noOfSamples;
     
     ch=Chapter(char(coldate));    
     s1=Section('Probability of Detection');
@@ -182,7 +183,7 @@ for dno= 1:1
     add(ch,s2)
     s3=Section('FOA error');
     for kk=1:4
-        add(s3,Figure(Hb(1)))
+        add(s3,Figure(Hb(kk)))
     end
     add(ch,s3)
     s4=Section('FDOA error');
@@ -220,19 +221,21 @@ end
 cc(1,1:12)={'Date';'Detection Prob';'Loc Prob(Single)';'Loc Prob(Multi)';'AE<5km(single)';'AE<10km(single)';'AE<5km(Multi)';'AE<10km(Multi)';'AE/EHE<0.1';'AE/EHE<1';'AE/EHE>2';'Anomaly'};
 
 j=1;
-a=0;b=0;c=0;d=0;
-for dno= 1:1
+a=0;b=0;c=0;d=0;e=0;
+for dno= 1:noOfDays
     coldate = startDate+(dno-1);
     coldate.Format='dd-MMM-yy';
     cc(1+dno,1)={char(coldate)};
+    noOfSamples = bstat{5,j,dno};
     detstat=bstat{1,j,dno};
-    a=a+detstat;
+    a=a+detstat*noOfSamples(2);
     PrLoc=bstat{2,j,dno};
-    b=b+PrLoc;
+    b=b+PrLoc.*noOfSamples;
     accPerc=bstat{3,j,dno};
-    c=c+accPerc;
+    c=c+accPerc.*noOfSamples;
     predAcc=bstat{4,j,dno};
-    d=d+predAcc;
+    d=d+predAcc.*noOfSamples;
+    e= e+noOfSamples;
     cc(1+dno,2)={num2str(detstat,'%05.3f')};
     cc(1+dno,3)={num2str(PrLoc(1),'%04.2f')};
     cc(1+dno,4)={num2str(PrLoc(2),'%04.2f')};
@@ -245,11 +248,11 @@ for dno= 1:1
     cc(1+dno,11)={num2str(predAcc(1,3),'%04.2f')};
     cc(1+dno,12)={'-'};
 end
-noOfDays=1;
-a=a/noOfDays;
-b=b/noOfDays;
-c=c/noOfDays;
-d=d/noOfDays;
+totalSamples = e;
+a=a/totalSamples(2);
+b=b./totalSamples;
+c=c./totalSamples;
+d=d./totalSamples;
 
 cc(2+dno,1)={'Overall'};
 cc(2+dno,2)={num2str(a,'%05.3f')};
@@ -271,6 +274,61 @@ add(s00,tb0)
 add(ch0,s00)
 add(R1,ch0)
 close(R1)
+
+j=2;
+a=0;b=0;c=0;d=0;e=0;
+for dno= 1:noOfDays
+    coldate = startDate+(dno-1);
+    coldate.Format='dd-MMM-yy';
+    cc(1+dno,1)={char(coldate)};
+    noOfSamples = bstat{5,j,dno};
+    detstat=bstat{1,j,dno};
+    a=a+detstat*noOfSamples(2);
+    PrLoc=bstat{2,j,dno};
+    b=b+PrLoc.*noOfSamples;
+    accPerc=bstat{3,j,dno};
+    c=c+accPerc.*noOfSamples;
+    predAcc=bstat{4,j,dno};
+    d=d+predAcc.*noOfSamples;
+    e= e+noOfSamples;
+    cc(1+dno,2)={num2str(detstat,'%05.3f')};
+    cc(1+dno,3)={num2str(PrLoc(1),'%04.2f')};
+    cc(1+dno,4)={num2str(PrLoc(2),'%04.2f')};
+    cc(1+dno,5)={num2str(accPerc(1,1),'%04.2f')};
+    cc(1+dno,6)={num2str(accPerc(1,2),'%04.2f')};
+    cc(1+dno,7)={num2str(accPerc(2,1),'%04.2f')};
+    cc(1+dno,8)={num2str(accPerc(2,2),'%04.2f')};
+    cc(1+dno,9)={num2str(predAcc(1,2),'%04.2f')};
+    cc(1+dno,10)={num2str(predAcc(1,1),'%04.2f')};
+    cc(1+dno,11)={num2str(predAcc(1,3),'%04.2f')};
+    cc(1+dno,12)={'-'};
+end
+totalSamples = e;
+a=a/totalSamples(2);
+b=b./totalSamples;
+c=c./totalSamples;
+d=d./totalSamples;
+
+cc(2+dno,1)={'Overall'};
+cc(2+dno,2)={num2str(a,'%05.3f')};
+cc(2+dno,3)={num2str(b(1),'%04.2f')};
+cc(2+dno,4)={num2str(b(2),'%04.2f')};
+cc(2+dno,5)={num2str(c(1,1),'%04.2f')};
+cc(2+dno,6)={num2str(c(1,2),'%04.2f')};
+cc(2+dno,7)={num2str(c(2,1),'%04.2f')};
+cc(2+dno,8)={num2str(c(2,2),'%04.2f')};
+cc(2+dno,9)={num2str(d(1,2),'%04.2f')};
+cc(2+dno,10)={num2str(d(1,1),'%04.2f')};
+cc(2+dno,11)={num2str(d(1,3),'%04.2f')};
+cc(2+dno,12)={'-'};
+
+tb0=BaseTable(cc);
+ch0=Chapter('Summary');
+s00=Section('At a glance');
+add(s00,tb0)
+add(ch0,s00)
+add(R2,ch0)
 close(R2)
+
 rptview(R1)
 rptview(R2)
