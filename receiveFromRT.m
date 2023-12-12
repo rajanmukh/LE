@@ -1,20 +1,22 @@
 clpath=pwd;%'C:\Users\Istrac\Downloads\18.05.23\Loc_Est\LE';
 if ~exist('initialized','var')
     addpath([clpath,'\sgp4']);
-    javaclasspath([clpath,'\javaclasses']);  
-    
+    addpath([clpath,'\propagator']);
+    javaclasspath([clpath,'\javaclasses']);   
     initialized = true;
+    readrinex('BRDC00IGS_R_20233380000_01D_MN.rnx');
 end
 warning('off','MATLAB:nearlySingularMatrix')
 warning('off','MATLAB:rankDeficientMatrix')
 warning('off','MATLAB:hex2dec:InputExceedsFlintmax')
 if exist('rx','var')
-    rx.close()
+%     rx.close()
     wrt.close()
     wrtB.close()
     wrtS.close()
     pause(1)
 end
+fileID=fopen('beacondata_LE_2023_12_04.txt');%%
 load('prns.mat')
 present_hour = 0;
 prev_hour = 0;
@@ -22,31 +24,34 @@ present_day=0;
 prev_day=0;
 msgnoB=1;
 msgnoS=1;
-% readtle();
-rx=javaObject('Receiver','127.0.0.1',6006);
+%%% readtle();
+% rx=javaObject('Receiver','127.0.0.1',6006);
 wrt=javaObject('Archiver',string(clpath));
 wrtB=javaObject('Archiver',string(strcat(clpath,'\commissioning\Bdata')));
 wrtS=javaObject('Archiver',string(strcat(clpath,'\commissioning\Sdata')));
 initializeRecord();
-ANTS=1:7;
-DUMMY=datetime;
+snameindex=[24,45,66,87,108,129,150]+1;
 while(1)
-    ca=native2unicode(rx.receive());
+%     ca=native2unicode(rx.receive());
+    ca=fgetl(fileID);%%
     if isempty(ca)
-        'not connected'
-        pause(1)
+%         'not connected'
+%         pause(1)
         continue;
     end
-    
-    str=string(ca');
+    if ~ischar(ca)%%
+        break;%end of file%%
+    end%%
+%     str=string(ca');
+    str=string(ca);%%
     ss=split(str,',');
-    antmarks=str2double(ss(12:18));
-    snames=ss([24,45,66,87,108,129,150]);
-    ants=ANTS(antmarks==1 & ~strcmp(snames,'DEFAULT'));
+    antmarks=str2double(ss(13:19));
+    snames=ss(snameindex);
+    ants=find(antmarks==1 & ~strcmp(snames,'DEFAULT'));
     nos = length(ants);
     msgs = cell(1,nos);
     brates= cell(1,nos);
-    toas = repmat(DUMMY,1,nos);
+    toas = repmat(NaT,1,nos);
     tmstamps = cell(1,nos);
     foas = zeros(1,nos);
     CNRs = zeros(1,nos);
@@ -55,17 +60,23 @@ while(1)
     pdf2errs=cell(1,nos);
     for i=1:nos
         chn=ants(i);
-        ii=22+(chn-1)*21; 
+        ii=2+chn*21; %%itwas 22
         
         sname = char(ss(ii+2));
-        SIDs(i)=getSID(sname,prns);
+        sid=getSID(sname,prns);
+        SIDs(i)=sid;
         tmstamps{i} = char(ss(ii+3));
         brates{i} = char(ss(ii+4));
         id=char(ss(ii+7));
         msg=char(ss(ii+8));
         msgs{i}=msg;
         CNRs(i)=str2double(ss(ii+9));
-        foas(i)=str2double(ss(ii+10));
+        foa=str2double(ss(ii+10));
+        if sid==419
+            foas(i)=foa-2.6;
+        else
+            foas(i)=foa;
+        end
         pdf1errs{i}=char(ss(ii+11));
         pdf2errs{i}=char(ss(ii+12));
         toa = ss(ii+13:ii+20);
@@ -89,10 +100,14 @@ while(1)
     
     if nos>0
         msgno=msgno+1;
-        msgno
+%         msgno
 %         if msgno == 249
         
         [loc,err,antsV,sInfo]=computeLocation(toas, foas, CNRs, SIDs);
+        if strcmp(id,'3ADEA2223F81FE0')
+            distance(loc.lat,loc.lon,24.431,54.448,referenceEllipsoid('WGS84'))*1e-3
+            fhf=0;
+        end
         if length(antsV)>1 && ~all(antsV)
             %purge
             msgs = msgs(antsV);

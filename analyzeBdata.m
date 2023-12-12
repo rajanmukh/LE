@@ -71,12 +71,17 @@ for i=1:7
         text(t1(sel1(1)),1+mod(j,2),getSatName(satid,prns))
     end   
    
-    text(toaB(end),1,['rms= ',num2str(rms(ferr),'%3.1f')])
+    text(toaB(end),1,['rms= ',num2str(rms(f1-refFreq),'%3.1f')])
     ylim([-2 2])
     ylabel(['FOA err(Hz) ',num2str(i)])
     yyaxis right
-    plot(t1,fdu1,'LineStyle','--','Color','black','Marker','none')
-    plot(t1,fdd1,'LineStyle','-','Color','black','Marker','none')
+    for j=1:noofSegs1
+        sel1=st(j):en(j);
+        satid=s1(st(j));
+        pltcolor=clrs(satid,:);
+        plot(t1(sel1),fdu1(sel1),'LineStyle','--','Color','black','Marker','none')
+        plot(t1(sel1),fdd1(sel1),'LineStyle','none','Color',pltcolor,'Marker','.')
+    end 
     ylim([-3e3 3e3])
     ylabel('Doppler(Hz)','Color','black')   
     ax.YColor = 'black';
