@@ -307,10 +307,10 @@ for i=1:noOfSat
             else
                 [X,V]=SatPos_brdc_GLO(Ttr+dt(i),slno);
             end
-            dt(i)=tof(X.'*1e-3,place);
+            dt(i)=tof(X*1e-3,place);
         end        
-        posS(:,i)=X.'*1e-3;
-        velS(:,i)=V.'*1e-3;
+        posS(:,i)=X*1e-3;
+        velS(:,i)=V*1e-3;
     end
 end
 end

@@ -16,11 +16,13 @@ t0=split2fields(toas);
 % [toa,d,date,fc,freq_trns]=readSatParamsSGP(datetoa,foa,satIDs);
 [stdtoa,stdfoa]=estimateMeasError(cnrs);
 t1=addSeconds(t0,0.16);
-[posS,velS,dt]=actualtof(t1,satIDs,BANGALORE,'downlink');
+% [posS,velS,dt]=actualtof(t1,satIDs,BANGALORE,'downlink');
+[posS,velS,dt]=getPreciseSatPosVel_r(toas+0.16/86400,satIDs,BANGALORE,'downlink');
 sInfo.upTOA = toas - dt/86400;
 t=t0.s-dt;%onboard transmit/receive time
 t2=addSeconds(t0,0.08);
-[posS1,velS1,~]=actualtof(t2,satIDs,BANGALORE,'downlink');%for doppler calculation
+% [posS1,velS1,~]=actualtof(t2,satIDs,BANGALORE,'downlink');%for doppler calculation
+[posS1,velS1,~]=getPreciseSatPosVel_r(toas+0.25/86400,satIDs,BANGALORE,'downlink');
 fd=getDoppler(posS1,velS1,BANGALORE,fc);
 fc1=fc-fd-freq_trns;
 uSIDs = unique(satIDs);
@@ -50,8 +52,8 @@ if noOfSats>=3
     if ~errorDetected || (errorDetected && errorEliminated)
         location_est=G(1:3);
         % t(:)=G(4);
-        [posS2,velS2,~]=actualtof(t2,satIDs,location_est,'uplink');
-        fd1 = getDoppler(posS2,velS2,location_est,fc1);
+%         [posS2,velS2,~]=actualtof(t2,satIDs,location_est,'uplink');
+        fd1 = getDoppler(posS1,velS1,location_est,fc1);
         ft=fc1-fd1;
         llaPos=ecef2lla(1e3*G(1:3)');
         loc.lat=llaPos(1);
@@ -275,8 +277,8 @@ elpse=[1.4*ab(1),1.4*ab(2),A];
 end
 
 function [terrstd,ferrstd] = estimateMeasError(cbn0)
-terrstd=0.3*(15*2.^((-cbn0+35)/6))';
-ferrstd=0.7e-3*(0.2*2.^((-cbn0+35)/6)+1)';
+terrstd=0.3*6*ones(length(cbn0),1);
+ferrstd=0.7e-3*0.2*ones(length(cbn0),1);
 end
 
 function t=split2fields(toa)
@@ -289,3 +291,46 @@ function t1 = addSeconds(t,s)
 t1=t;
 t1.s=t.s+ s;
 end
+
+function[posS,velS,dt]=getPreciseSatPosVel_r(t,satTD,place,journey)
+global ephdata;
+noOfSat=length(t);
+posS=zeros(3,noOfSat);
+velS=zeros(3,noOfSat);
+dt=zeros(1,noOfSat);
+svID=satTD-400;
+for i=1:noOfSat
+    if svID(i)<100 %gallileo
+        d=ephdata{svID(i)};
+        [~,ind]=min(abs(seconds(t(i)-d.Time)));
+        for j=1:2
+            if strcmp(journey,'downlink')
+                [posS_t,velS_t]=gnssconstellation(t(i)-dt(i)/86400,RINEXData=d(ind,:));
+            else
+                [posS_t,velS_t]=gnssconstellation(t(i)+dt(i)/86400,RINEXData=d(ind,:));
+            end
+            dt(i)=tof(posS_t.'*1e-3,place);
+        end
+        posS(:,i)=posS_t.'*1e-3;
+        velS(:,i)=velS_t.'*1e-3;
+    else %glonass
+        %get the slot number
+        tlist=[0,9,11,22];
+        slno=tlist(svID(i)-100);
+        t_jd=cal2jd_GT(t(i).Year,t(i).Month,t(i).Day+(t(i).Hour*3600+t(i).Minute*60+t(i).Second)/86400);
+        t_jd = t_jd + 18/(60*60*24);
+        [twk,Ttr,rollover]=jd2gps_GT(t_jd);
+        for j=1:2
+            if strcmp(journey,'downlink')
+                [X,V]=SatPos_brdc_GLO(Ttr-dt(i),slno);
+            else
+                [X,V]=SatPos_brdc_GLO(Ttr+dt(i),slno);
+            end
+            dt(i)=tof(X*1e-3,place);
+        end        
+        posS(:,i)=X*1e-3;
+        velS(:,i)=V*1e-3;
+    end
+end
+end
+

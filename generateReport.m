@@ -123,14 +123,14 @@ for dno= 1:noOfDays
     %% 
     coldate.Format='dd-MMM-yy';
     
-    ID = '9C6000000000001';%France
-    pos=[43.56,1.48,214];BRT=50;
-    refFreq = 406.022000e6;
-    initializeRecord();
-    addpath([pwd,'\sgp4']);
-    readtle(toa(1));
-    
-    [Hb,detstat]=analyzeBdata1(msg,ID,pos,refFreq,BRT,bID_b,foa,foff,toa,CNR,antNo,SIDa,pXYZ,vXYZ);  
+%     ID = '9C6000000000001';%France
+%     pos=[43.56,1.48,214];BRT=50;
+%     refFreq = 406.022000e6;
+%     initializeRecord();
+%     addpath([pwd,'\sgp4']);
+%     readtle(toa(1));
+%     
+%     [Hb,detstat]=analyzeBdata1(msg,ID,pos,refFreq,BRT,bID_b,foa,foff,toa,CNR,antNo,SIDa,pXYZ,vXYZ);  
 %     [PrLoc,accPerc,predAcc,noOfSamples,Hs]=solStat(ID,bID_s,noP,noB,lat,lon,locerr,EHE,solMethod,avtoa1,avtoa2,BRT,pos(1:2));
 %     bstat{1,2,dno}= detstat; bstat{2,2,dno}=PrLoc ;bstat{3,2,dno}= accPerc;bstat{4,2,dno}= predAcc;bstat{5,2,dno}= noOfSamples;
     

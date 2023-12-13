@@ -32,7 +32,7 @@ wrtS=javaObject('Archiver',string(strcat(clpath,'\commissioning\Sdata')));
 initializeRecord();
 snameindex=[24,45,66,87,108,129,150]+1;
 while(1)
-%     ca=native2unicode(rx.receive());
+%     ca=native2unicode(rx.receive()); 
     ca=fgetl(fileID);%%
     if isempty(ca)
 %         'not connected'
@@ -73,9 +73,9 @@ while(1)
         CNRs(i)=str2double(ss(ii+9));
         foa=str2double(ss(ii+10));
         if sid==419
-            foas(i)=foa-2.6;
+            foas(i)=foa+10;
         else
-            foas(i)=foa;
+            foas(i)=foa+12.6;
         end
         pdf1errs{i}=char(ss(ii+11));
         pdf2errs{i}=char(ss(ii+12));
@@ -100,14 +100,14 @@ while(1)
     
     if nos>0
         msgno=msgno+1;
-%         msgno
+        msgno
 %         if msgno == 249
         
         [loc,err,antsV,sInfo]=computeLocation(toas, foas, CNRs, SIDs);
-        if strcmp(id,'3ADEA2223F81FE0')
-            distance(loc.lat,loc.lon,24.431,54.448,referenceEllipsoid('WGS84'))*1e-3
-            fhf=0;
-        end
+%         if strcmp(id,'3ADEA2223F81FE0')
+%             distance(loc.lat,loc.lon,24.431,54.448,referenceEllipsoid('WGS84'))*1e-3
+%             fhf=0;
+%         end
         if length(antsV)>1 && ~all(antsV)
             %purge
             msgs = msgs(antsV);
@@ -148,7 +148,7 @@ while(1)
     prev_hour = present_hour;
     prev_day = present_day;
 end
-rx.close()
+% rx.close()
 wrt.close()
 wrtB.close()
 wrtS.close()
