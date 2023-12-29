@@ -26,8 +26,10 @@ for i=1:noB
 end
 wts = 10.^(cnrs/20);
 nf=1/sum(wts);
-loc.lat = nf*sum(lats.*wts);
-loc.lon = nf*sum(lons.*wts);
+% loc.lat = nf*sum(lats.*wts);
+loc.lat = median(lats);
+% loc.lon = nf*sum(lons.*wts);
+loc.lon = median(lons);
 loc.alt = nf*sum(alts.*wts);
 err.EHE = sqrt(sum((EHEs.*wts).^2)/sum(wts)^2);
 sInfo.ft = nf*sum(fts.*wts);

@@ -1,10 +1,18 @@
+clear
+RxSite=lla2ecef([13.036,77.5124,930])'*1e-3;%Bangalore
+REFID='3ADEA2223F81FE0';
+otherID=true;
+% REFID='347C000000FFBFF';
+% TxSite=lla2ecef([24.431,54.448,5])'*1e-3;%UAE;BRT=50;
+% FoT=406.043000e6;
+
 clpath=pwd;%'C:\Users\Istrac\Downloads\18.05.23\Loc_Est\LE';
 if ~exist('initialized','var')
     addpath([clpath,'\sgp4']);
     addpath([clpath,'\propagator']);
     javaclasspath([clpath,'\javaclasses']);   
     initialized = true;
-    readrinex('BRDC00IGS_R_20233380000_01D_MN.rnx');
+    readrinex('Ephemeris\BRDC00IGS_R_20233500000_01D_MN.rnx');
 end
 warning('off','MATLAB:nearlySingularMatrix')
 warning('off','MATLAB:rankDeficientMatrix')
@@ -16,7 +24,7 @@ if exist('rx','var')
     wrtS.close()
     pause(1)
 end
-fileID=fopen('beacondata_LE_2023_12_04.txt');%%
+fileID=fopen('BeaconData\beacondata_LE_2023_12_16.txt');%%
 load('prns.mat')
 present_hour = 0;
 prev_hour = 0;
@@ -31,6 +39,10 @@ wrtB=javaObject('Archiver',string(strcat(clpath,'\commissioning\Bdata')));
 wrtS=javaObject('Archiver',string(strcat(clpath,'\commissioning\Sdata')));
 initializeRecord();
 snameindex=[24,45,66,87,108,129,150]+1;
+count=0;count1=0;
+bm=zeros(7,1728);
+TOAs=NaT(1,1728);
+j=1;
 while(1)
 %     ca=native2unicode(rx.receive()); 
     ca=fgetl(fileID);%%
@@ -47,7 +59,7 @@ while(1)
     ss=split(str,',');
     antmarks=str2double(ss(13:19));
     snames=ss(snameindex);
-    ants=find(antmarks==1 & ~strcmp(snames,'DEFAULT'));
+    ants=find(antmarks==1 & ~strcmp(snames,'DEFAULT') & ~strcmp(snames,'0'));
     nos = length(ants);
     msgs = cell(1,nos);
     brates= cell(1,nos);
@@ -68,15 +80,22 @@ while(1)
         tmstamps{i} = char(ss(ii+3));
         brates{i} = char(ss(ii+4));
         id=char(ss(ii+7));
+        otherID=~strcmp(id,REFID);
+        if otherID
+            break;
+        end
         msg=char(ss(ii+8));
         msgs{i}=msg;
         CNRs(i)=str2double(ss(ii+9));
         foa=str2double(ss(ii+10));
         if sid==419
             foas(i)=foa+10;
+        elseif sid == 502
+            foas(i)=foa+13.6;
         else
             foas(i)=foa+12.6;
         end
+        
         pdf1errs{i}=char(ss(ii+11));
         pdf2errs{i}=char(ss(ii+12));
         toa = ss(ii+13:ii+20);
@@ -90,26 +109,77 @@ while(1)
         if present_hour ~= prev_hour
             readtle(toas(i));
         end
-        if present_day ~= prev_day
-            msgno=0;
-            wrt.makenewfile(string(datetime([char(toa(1)),'-',char(toa(2))],'InputFormat','uuuu-DDD','format','yy_MM_dd')));
-            wrtB.makenewfile(string(datetime([char(toa(1)),'-',char(toa(2))],'InputFormat','uuuu-DDD','format','yy_MM_dd')));
-            wrtS.makenewfile(string(datetime([char(toa(1)),'-',char(toa(2))],'InputFormat','uuuu-DDD','format','yy_MM_dd')));
-        end       
+            
+    end
+    if present_day ~= prev_day
+        msgno=0;
+        wrt.makenewfile(string(datetime([char(toa(1)),'-',char(toa(2))],'InputFormat','uuuu-DDD','format','yy_MM_dd')));
+        wrtB.makenewfile(string(datetime([char(toa(1)),'-',char(toa(2))],'InputFormat','uuuu-DDD','format','yy_MM_dd')));
+        wrtS.makenewfile(string(datetime([char(toa(1)),'-',char(toa(2))],'InputFormat','uuuu-DDD','format','yy_MM_dd')));
     end
     
+    if otherID 
+        continue;
+    end
+    if nos>0
+        bm(ants,j)=SIDs';
+        TOAs(j)=toas(1);
+        j=j+1;
+    end
     if nos>0
         msgno=msgno+1;
         msgno
-%         if msgno == 249
         
+        if any(SIDs==422)
+            if nos==3
+                count=count+1;
+            end
+            nos=nos-1;
+            toas(SIDs==422)=[];
+            foas(SIDs==422)=[];
+            CNRs(SIDs==422)=[];
+            ants(SIDs==422)=[];
+            SIDs(SIDs==422)=[];
+        end
+        if any(SIDs==423)
+            if nos==3
+                count=count+1;
+            end
+            nos=nos-1;
+            toas(SIDs==423)=[];
+            foas(SIDs==423)=[];
+            CNRs(SIDs==423)=[];
+            ants(SIDs==423)=[];
+            SIDs(SIDs==423)=[];
+        end
+        
+%         foa_m = foas+53.1311e3+1544.1e6-1e5;
+%         foa_m(SIDs>500)=foa_m(SIDs>500)+8e5;
+%         [TOT_e,FOA_e]=TRxOperation1(SIDs,toas,FoT,TxSite,RxSite);
+%         ferr=foa_m-FOA_e;
+%         
+%         if any(abs(ferr)>1)
+%             count1=count1+1;
+%             tr=mean(TOT_e(abs(ferr)<1));
+%             t1=TOT_e(abs(ferr)>1);
+%             terr=1e6*seconds(tr-t1);
+%         end
         [loc,err,antsV,sInfo]=computeLocation(toas, foas, CNRs, SIDs);
+        if ~isempty(loc)
+            if ~isreal(err.EHE)
+                continue;
+            end
+        end
 %         if strcmp(id,'3ADEA2223F81FE0')
 %             distance(loc.lat,loc.lon,24.431,54.448,referenceEllipsoid('WGS84'))*1e-3
 %             fhf=0;
 %         end
+        
         if length(antsV)>1 && ~all(antsV)
             %purge
+            if length(antsV)==3
+                count=count+1;
+            end
             msgs = msgs(antsV);
             brates = brates(antsV);
             toas = toas(antsV);
@@ -152,6 +222,7 @@ end
 wrt.close()
 wrtB.close()
 wrtS.close()
+generateReport1
 
 function SID=getSID(snm,prnlist)
 if snm(1)=='G'

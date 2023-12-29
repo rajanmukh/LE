@@ -28,7 +28,7 @@ for i=1:100
             end
             loc=[];
             noOfLocs=sum(validInd);
-            if noB >= noOfLocs
+            if false%noB >= noOfLocs
                 %Global Method
                 noB=bWrt(i);
                 noP=sum(noPs);

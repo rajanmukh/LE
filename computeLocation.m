@@ -30,7 +30,7 @@ sInfo.foff=fd;
 fc1=fc-fd-freq_trns;
 sInfo.upFOA=fc1;
 noOfSats=length(satIDs);
-if noOfSats>=2    
+if noOfSats>=3    
     G=firstGuess(posS,t);
     G(5)=mean(fc1);
     for i=1:15
@@ -259,7 +259,7 @@ end
 
 function [terrstd,ferrstd] = estimateMeasError(cbn0)
 terrstd=0.3*6*ones(length(cbn0),1);%(15*2.^((-cbn0+35)/6))';
-ferrstd=0.7e-3*0.2*ones(length(cbn0),1);%(0.2*2.^((-cbn0+35)/6)+1)';
+ferrstd=0.7e-3*0.15*ones(length(cbn0),1);%(0.2*2.^((-cbn0+35)/6)+1)';
 end
 
 function t=split2fields(toa)

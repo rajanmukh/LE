@@ -30,8 +30,8 @@ add(R3,tp3)
 toc3=TableOfContents;
 add(R3,toc3)
 
-startDate = datetime('4-Dec-2023');
-noOfDays = 1;
+startDate = datetime('1-Oct-2023');
+noOfDays = 3;
 bstat = cell(5,3,noOfDays);
 for dno= 1:noOfDays
     coldate = startDate+(dno-1)
@@ -39,7 +39,7 @@ for dno= 1:noOfDays
     %%
     filename = ['commissioning\Bdata\Log\','sit_',num2str(coldate.Year-2000),'_',num2str(coldate.Month,'%02d'),'_',num2str(coldate.Day,'%02d'),'.txt'];
     
-    fbias=-13;   
+    
     
     fileID=fopen(filename);
     dataarr=textscan(fileID,'%s%[^\n\r]','Delimiter','');
@@ -66,7 +66,7 @@ for dno= 1:noOfDays
         fields = split(lines{i},',');
         msg{i}=fields{2};
         bID_b{i}=fields{3};
-        foa(i) = str2double(fields{5})-fbias;
+        foa(i) = str2double(fields{5});
         foff(i) = str2double(fields{6});
         toa(i) = datetime(fields{7},'InputFormat','yyyy-MM-dd HH:mm:ss.SSSSSSSSS');
         toff(i) = str2double(fields{8});
@@ -82,6 +82,7 @@ for dno= 1:noOfDays
     filename = ['commissioning\Sdata\Log\','sit_',num2str(coldate.Year-2000),'_',num2str(coldate.Month,'%02d'),'_',num2str(coldate.Day,'%02d'),'.txt'];
     fileID=fopen(filename);
     dataarr=textscan(fileID,'%s%[^\n\r]','Delimiter','');
+    fclose(fileID);
     lines=dataarr{1};
     clear dataarr
     noOfLines = floor(length(lines)/1);
@@ -138,7 +139,7 @@ for dno= 1:noOfDays
 %     ID='34707564BF81FE0';%india
     pos=[13.036,77.5124,930];BRT=50;
 %     pos=[13.723,80.324,0];BRT=50;
-    refFreq = 406.064000e6;
+    refFreq = 406.028000e6;
 %     refFreq = 406.039958e6;
     [Hb,detstat]=analyzeBdata(ID,pos,refFreq,BRT,bID_b,foa,foff,toa,CNR,antNo,SIDa,pXYZ,vXYZ);  
     [PrLoc,accPerc,predAcc,noOfSamples,Hs]=solStat(ID,bID_s,noP,noB,lat,lon,locerr,EHE,solMethod,avtoa1,avtoa2,BRT,pos(1:2));

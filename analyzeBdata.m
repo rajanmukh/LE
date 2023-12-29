@@ -49,6 +49,7 @@ for i=1:7
     sel=antB==i;
     t1=toaB(sel);
     if isempty(t1)
+        text(0.5,0.5,'no data')
         continue;
     end
     f1=ftB(sel);
@@ -71,7 +72,7 @@ for i=1:7
         text(t1(sel1(1)),1+mod(j,2),getSatName(satid,prns))
     end   
    
-    text(toaB(end),1,['rms= ',num2str(rms(f1-refFreq),'%3.1f')])
+    text(toaB(end),1,['std= ',num2str(std(f1-refFreq),'%3.1f')])
     ylim([-2 2])
     ylabel(['FOA err(Hz) ',num2str(i)])
     yyaxis right
