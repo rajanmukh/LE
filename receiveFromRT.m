@@ -1,6 +1,7 @@
 clear
 RxSite=lla2ecef([13.036,77.5124,930])'*1e-3;%Bangalore
-REFID='3ADEA2223F81FE0';
+REFID='9C6000000000001';
+dt='2023_12_18';
 otherID=true;
 % REFID='347C000000FFBFF';
 % TxSite=lla2ecef([24.431,54.448,5])'*1e-3;%UAE;BRT=50;
@@ -12,7 +13,8 @@ if ~exist('initialized','var')
     addpath([clpath,'\propagator']);
     javaclasspath([clpath,'\javaclasses']);   
     initialized = true;
-    readrinex('Ephemeris\BRDC00IGS_R_20233500000_01D_MN.rnx');
+    doy=day(datetime(dt,"InputFormat","uuuu_MM_dd"),'dayofyear');
+    readrinex(['Ephemeris\BRDC00IGS_R_2023',num2str(doy,'%03d'),'0000_01D_MN.rnx']);
 end
 warning('off','MATLAB:nearlySingularMatrix')
 warning('off','MATLAB:rankDeficientMatrix')
@@ -24,7 +26,7 @@ if exist('rx','var')
     wrtS.close()
     pause(1)
 end
-fileID=fopen('BeaconData\beacondata_LE_2023_12_16.txt');%%
+fileID=fopen(['BeaconData\beacondata_LE_',dt,'.txt']);%%
 load('prns.mat')
 present_hour = 0;
 prev_hour = 0;
@@ -100,7 +102,12 @@ while(1)
         pdf2errs{i}=char(ss(ii+12));
         toa = ss(ii+13:ii+20);
         if isempty(toa(8))
-            continue;
+            otherID=true;
+            break;
+        end
+        if strcmp(toa(3),'24')
+            otherID=true;
+            break;
         end
         TOA=[num2str(str2double(toa(1))+2000),'-',num2str(str2double(toa(2)),'%03d'),' ',num2str(str2double(toa(3)),'%02d'),':',num2str(str2double(toa(4)),'%02d'),':',num2str(str2double(toa(5)),'%02d'),':',num2str(str2double(toa(6)),'%03d'),num2str(str2double(toa(7)),'%03d'),num2str(str2double(toa(8)),'%03d')];
         toas(i) = datetime(TOA,'InputFormat','uuuu-DDD HH:mm:ss:SSSSSSSSS'); 

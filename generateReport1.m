@@ -4,26 +4,47 @@ import mlreportgen.report.*
 import mlreportgen.dom.* 
 
 
-startDate = datetime('16-Dec-2023');
-R2=Report(['Report\UAE Beacon Statistics_',char(startDate)],'docx');
+startDate = datetime('18-Dec-2023');
+countryname='France';
+fname=['Report\',countryname,'Beacon Statistics_'];
+R2=Report([fname,char(startDate)],'docx');
 % R2=Report('India Beacon Statistics_new','docx');
 open(R2)
 tp2 = TitlePage();
-tp2.Title = 'UAE BEACON';
+tp2.Title = [countryname,' BEACON'];
 % tp2.Title = 'India BEACON';
 tp2.Author = 'ISTRAC';
 add(R2,tp2)
 toc2=TableOfContents;
 add(R2,toc2)
 
-ID = '3ADEA2223F81FE0';%uae
-pos=[24.431,54.448,5];BRT=50;
-refFreq = 406.043000e6;
+% ID = '3ADEA2223F81FE0';%uae
+% pos=[24.431,54.448,5];BRT=50;
+% refFreq = 406.043000e6;
 
-% ID='347C000000FFBFF';
+% ID='347C000000FFBFF';%india
 % pos=[13.036,77.5124,930];BRT=50;
 % refFreq = 406.028000e6;
 
+% ID='3EFC000002FFBFF';%Australia
+% pos=[-29.0465,115.3425,281];BRT=50;
+% refFreq = 406.037000e6;
+
+% ID='9C62EE2962AF260';%Reunion
+% pos=[-20.9088888,55.51361,95];BRT=50;
+% refFreq = 406.052000e6;
+
+% ID='9A22EE29629E2A0';%Cyprus
+% pos=[34.86539012,33.38375133,323];BRT=150;
+% refFreq = 406.052000e6;
+
+% ID='B5FE18FED639240';%Japan
+% pos=[35.238833,139.9195,5];BRT=50;
+% refFreq = 406.034000e6;
+
+ID='9C6000000000001';%France
+pos=[43.5605,1.4808,214];BRT=30;
+refFreq = 406.022000e6;
 
 noOfDays = 1;
 bstat = cell(5,3,noOfDays);
@@ -234,5 +255,5 @@ add(R2,ch0)
 close(R2)
 
 
-rptview(['Report\UAE Beacon Statistics_',char(startDate),'.docx'],'pdf')
-delete(['Report\UAE Beacon Statistics_',char(startDate),'.docx'])
+rptview([fname,char(startDate),'.docx'],'pdf')
+delete([fname,char(startDate),'.docx'])
