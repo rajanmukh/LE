@@ -1,4 +1,4 @@
-function readrinex(filename)
+function missingIDs=readrinex(filename)
 %READRINEX Summary of this function goes here
 %   Detailed explanation goes here
 global ephdata;
@@ -7,6 +7,7 @@ ephdata=cell(1,36);
 eph_GLO=cell(1,25);
 info = rinexread(filename);
 data=info.Galileo;
+mark=ones(1,36);
 for i=1:36
     idx1=data.SatelliteID==i;
     data1=data(idx1,:);
@@ -14,8 +15,10 @@ for i=1:36
     if len>0
         idx2=data1.Time(1:end-1)~=data1.Time(2:end);        
         ephdata{i}=data1(idx2,:);
+        mark(i)=0;
     end
 end
+missingIDs=find(mark)+400;
 fide = fopen(filename);
 NAVDATA = textscan(fide,'%s','Delimiter','\n');   NAVDATA = NAVDATA{1};
 fclose(fide);

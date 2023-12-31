@@ -258,8 +258,8 @@ elpse=[1.4*ab(1),1.4*ab(2),A];
 end
 
 function [terrstd,ferrstd] = estimateMeasError(cbn0)
-terrstd=0.3*6*ones(length(cbn0),1);%(15*2.^((-cbn0+35)/6))';
-ferrstd=0.7e-3*0.15*ones(length(cbn0),1);%(0.2*2.^((-cbn0+35)/6)+1)';
+terrstd=0.3*4*ones(length(cbn0),1);%(0.3*4*2.^((-cbn0+50)/6))';%0.3*8*ones(length(cbn0),1);
+ferrstd=0.74e-3*0.06*ones(length(cbn0),1);%(0.74e-3*0.1*2.^((-cbn0+50)/6))';%
 end
 
 function t=split2fields(toa)
@@ -305,9 +305,13 @@ for i=1:noOfSat
             if strcmp(journey,'downlink')
                 [X,V]=SatPos_brdc_GLO(Ttr-dt(i),slno);
             else
-                [X,V]=SatPos_brdc_GLO(Ttr+dt(i),slno);
+                [X,V]=SatPos_brdc_GLO(Ttr+dt(i),slno);                
+            end 
+            if svID(i) == 102
+                dt(i)=tof(X*1e-3,place)-22.5e-6;
+            else
+                dt(i)=tof(X*1e-3,place)-8e-6;    
             end
-            dt(i)=tof(X*1e-3,place);
         end        
         posS(:,i)=X*1e-3;
         velS(:,i)=V*1e-3;
