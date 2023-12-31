@@ -1,12 +1,12 @@
 clear
-for cy=1:7
+for cy=3%1:7
     close all
     import mlreportgen.report.*
     import mlreportgen.dom.*
 
 
-    startDate = datetime('16-Dec-2023');
-    noOfDays = 10;
+    startDate = datetime('20-Dec-2023');
+    noOfDays = 1;
 
     switch cy
         case 1
