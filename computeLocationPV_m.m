@@ -1,4 +1,4 @@
-function [loc,err,antsV,sInfo] = computeLocation(toas,foas,cnrs,satIDs)
+function [loc,err,antsV,sInfo] = computeLocationPV_m(toas,foas,cnrs,satIDs)
 loc=[];
 err=[];
 sInfo=[];
@@ -30,33 +30,33 @@ sInfo.foff=fd;
 fc1=fc-fd-freq_trns;
 sInfo.upFOA=fc1;
 noOfSats=length(satIDs);
-if noOfSats>=3    
-    G=firstGuess(posS,t);
-%     G(5)=mean(fc1);
+if noOfSats>=4    
+    G=firstGuess(posS,t,fc1);
     for i=1:15
         %     [posS1,dt2]=actualtof2(posS,G(1:3));
-        [F,D]=FDcreatorT(posS,t,posS1,velS1,fc1,G,stdtoa,stdfoa,noOfSats);
+        [F,D]=FDcreator2(posS,t,posS1,velS1,fc1,G,stdtoa,stdfoa,noOfSats);
         %     [F,D]=FDcreator3(posS1,velS1,fc1,G);
         %     [F,D]=FDcreator1(posS,t,G);
-        del=D\F;
+            del=D\F;
 %         [del,~,resd]=lscov(D,F);
-        del(4)=del(4)*1e-3;
+        del(7)=del(7)*1e-3;
         G=G-del;
     end
     resd = norm(F);
 
-%     freqOutOfBounds = G(5)<406.01e6 || G(5)>406.09e6;    
+    freqOutOfBounds = G(8)<406.01e6 || G(8)>406.09e6;    
 
-    if resd>100        
+    if resd>100 || freqOutOfBounds       
         errorDetected=true;        
-        %try to identify wrong channel
-%         [~,tryOrder] = sort(abs(F(1:noOfChns)),'descend');
-        [G,D,antsV,errorEliminated] = tryElimination(satIDs,posS,t,posS1,velS1,fc1,stdtoa,stdfoa);        
-    else        
+        if noOfSats>=5
+            [G,D,antsV,errorEliminated] = tryEliminationPV(satIDs,posS,t,posS1,velS1,fc1,stdtoa,stdfoa);
+        else
+            [G,D,antsV,errorEliminated] = tryElimination(satIDs,posS,t,posS1,velS1,fc1,stdtoa,stdfoa); 
+        end
+    else
         errorDetected=false;
         antsV=ones(1,noOfChns,'logical');
     end
-
     if ~errorDetected || (errorDetected && errorEliminated)
         location_est=G(1:3);
         % t(:)=G(4);
@@ -67,23 +67,19 @@ if noOfSats>=3
         loc.lat=llaPos(1);
         loc.lon=llaPos(2);
         loc.alt=llaPos(3)/1e3;
+%         [course,Vh,Vv]=computeVel(G(4:6),loc.lat*pi/180,loc.lon*pi/180);
         [jdop,elp]=computeDOP(D,loc.lat*pi/180,loc.lon*pi/180);
         err.EHE = 2.5*jdop;
-        
         err.ellipse=elp;
-        if errorDetected
-            stdtoa = stdtoa(antsV);
-            ft = ft(antsV);
-            noOfSats = sum(antsV);
-        end
         sigt=median(stdtoa);
         sInfo.jdop=jdop/sigt;
         sInfo.ft=mean(ft);
         if noOfSats == 3
-            sInfo.solMethodology = 'P2Dd-Single';
+            sInfo.solMethodology = 'P2Dd';
         else
-            sInfo.solMethodology = 'P3D-Single';
-        end        
+            sInfo.solMethodology = 'P3D';
+        end
+        
     end
 else
     antsV=ones(1,noOfChns,'logical');%consistency cannot be checked for lack of sats
@@ -135,18 +131,18 @@ end
 function [F,D] = FDcreator(posS,t,G)
 global LIGHTSPEED;
 xyz=G(1:3);
-tg=G(4);
+tg=G(7);
 R=sqrt(sum((xyz-posS).^2));
 F=(R-LIGHTSPEED*(t-tg))';
-D=zeros(length(t),4);
+D=zeros(length(t),8);
 D(:,1:3)=((1./R).*(xyz-posS))';
-D(:,4)=1e-3*LIGHTSPEED;
+D(:,7)=1e-3*LIGHTSPEED;
 end
 
 function [F,D] = FDcreator1(posS,t,G)
 global LIGHTSPEED;
 xyz=G(1:3);
-tg=G(4);
+tg=G(7);
 R=sqrt(sum((xyz-posS).^2));
 R(end+1)=sqrt(sum(xyz.^2));
 f=1/298.257223560;
@@ -155,35 +151,24 @@ sinth2=(xyz(3))^2/(R(end)^2);
 lrad=a*(1-f*sinth2);
 obs_range=[LIGHTSPEED*(t-tg) lrad];
 F=(R-obs_range)';
-D=zeros(length(t)+1,4);
+D=zeros(length(t)+1,8);
 D(1:length(t),1:3)=((1./R(1:length(t))).*(xyz-posS))';
 D(1+length(t),1:3)=((1./R(1+length(t))).*xyz)';
-D(1:length(t),4)=1e-3*LIGHTSPEED;
+D(1:length(t),7)=1e-3*LIGHTSPEED;
 end
 
-function [F,D] = FDcreatorTD(posS,t,posS1,velS1,freq,G,stdtoa,stdfoa,noOfSats)
-if noOfSats == 3 || noOfSats == 2
-    [F1,D1]=FDcreator1(posS,t,G(1:4));
+function [F,D] = FDcreator2(posS,t,posS1,velS1,freq,G,stdtoa,stdfoa,noOfSats)
+if noOfSats >= 4
+    [F1,D1]=FDcreator1(posS,t,G);
     stdtoa=[stdtoa;0.5];
 else
-    [F1,D1]=FDcreator(posS,t,G(1:4));
+    [F1,D1]=FDcreator(posS,t,G);
 end
-[F2,D2]=FDcreator3(posS1,velS1,freq,G([1,2,3,5]));
+[F2,D2]=FDcreator3(posS1,velS1,freq,G);
 F=[F1./stdtoa;F2./stdfoa];
-D=zeros(length(F),5);
-D(1:length(F1),1:4)=D1./stdtoa;
-D(length(F1)+1:length(F),[1:3,5])=D2./stdfoa;
-end
-
-function [F,D] = FDcreatorT(posS,t,posS1,velS1,freq,G,stdtoa,stdfoa,noOfSats)
-if noOfSats == 3 || noOfSats == 2
-    [F1,D1]=FDcreator1(posS,t,G(1:4));
-    stdtoa=[stdtoa;0.5];
-else
-    [F1,D1]=FDcreator(posS,t,G(1:4));
-end
-F=F1./stdtoa;
-D=D1./stdtoa;
+D=zeros(length(F),8);
+D(1:length(F1),:)=D1./stdtoa;
+D(length(F1)+1:length(F),:)=D2./stdfoa;
 end
 
 function [F,D] = FDcreator3(posS,velS,freq,G)
@@ -191,45 +176,30 @@ global LIGHTSPEED;
 noOfSat=length(freq);
 F=zeros(noOfSat,1);
 xyz=G(1:3);
-fg=G(4);
+vxyz=G(4:6);
+fg=G(8);
 dxyz=posS-xyz;
 dr=sqrt(sum(dxyz.^2));
 uvw=dxyz./dr;
-vcomp=sum(uvw.*velS);
+relVel=velS-vxyz;
+vcomp=sum(uvw.*relVel);
 wvlen = LIGHTSPEED./freq;
 fd=freq-fg;
 F(1:noOfSat)=(vcomp+wvlen.*fd)';
 
-D=zeros(noOfSat,4);
-D(:,1:3) = ((1./dr).*(-velS+uvw.*vcomp))';
-D(:,4) = -wvlen';
+D=zeros(noOfSat,8);
+D(:,1:3) = ((1./dr).*(-relVel+uvw.*vcomp))';
+D(:,4:6) = -uvw';
+D(:,8) = -wvlen';
 end
 
-function [G] = firstGuess(pos,t)
+function [G] = firstGuess(pos,t,f)
 %FIRSTGUESS Summary of this function goes here
 %   Detailed explanation goes here
 EARTHCENTER=[1000;6000;1000];
+STATIONARY=[0;0;0];
 dt=tof(pos,EARTHCENTER);
-G=[EARTHCENTER;mean(t-dt)];
-end
-
-function[posS,velS,dt]= actualtof(t,sids,place,journey)
-dt=0;
-for i=1:3
-    if strcmp(journey,'downlink')
-        [posS,velS]=getSatPosVel(addSeconds(t,-dt),sids);
-    else
-        [posS,velS]=getSatPosVel(addSeconds(t,dt),sids);
-    end
-    dt=tof(posS,place);
-end
-end
-
-function [posS,dt]=actualtof2(posS,place)
-for j=1:3
-    dt=tof(posS,place);
-    [posS] = adjustRotation(posS,-dt);
-end
+G=[EARTHCENTER;STATIONARY;mean(t-dt);mean(f)];
 end
 
 function fd=getDoppler(posS,velS,place,freq)
@@ -268,9 +238,12 @@ t.s=3600*toa.Hour+60*toa.Minute+toa.Second;
 t.date=datetime(toa.Year,toa.Month,toa.Day);
 end
 
-function t1 = addSeconds(t,s)
-t1=t;
-t1.s=t.s+ s;
+function [course,Vh,Vv] = computeVel(Vecef,lat,lon)
+R=[-sin(lon) cos(lon) 0;-sin(lat)*cos(lon) -sin(lat)*sin(lon) cos(lat);cos(lat)*cos(lon) cos(lat)*sin(lon) sin(lat)];
+Venu=1e3*R*Vecef;
+course=180/pi*atan2(Venu(2),Venu(1));
+Vh=sqrt(sum(Venu(1:2).^2));
+Vv=Venu(3);
 end
 
 function[posS,velS,dt]=getPreciseSatPosVel_r(t,satTD,place,journey)

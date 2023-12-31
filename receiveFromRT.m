@@ -1,10 +1,10 @@
 clear
-for di=1:10
+for di=1:1
 
     RxSite=lla2ecef([13.036,77.5124,930])'*1e-3;%Bangalore
-    REFID={'9C62EE2962AF260','3EFC000002FFBFF','3ADEA2223F81FE0','9A22EE29629E2A0','B5FE18FED639240','9C6000000000001','9C7FEC2AACD3590'};
+    REFID='9C62EE2962AF260';%{'9C62EE2962AF260','3EFC000002FFBFF','3ADEA2223F81FE0','9A22EE29629E2A0','B5FE18FED639240','9C6000000000001','9C7FEC2AACD3590'};
     %     REFID1=;
-    dt=datetime(2023,12,16+di-1)
+    dt=datetime(2023,12,20+di-1)
     otherID=true;
     % REFID='347C000000FFBFF';
     % TxSite=lla2ecef([24.431,54.448,5])'*1e-3;%UAE;BRT=50;
@@ -167,7 +167,14 @@ for di=1:10
             %             t1=TOT_e(abs(ferr)>1);
             %             terr=1e6*seconds(tr-t1);
             %         end
-            [loc,err,antsV,sInfo]=computeLocation(toas, foas, CNRs, SIDs);
+            
+            
+            
+            if nos>=7
+                [loc,err,antsV,sInfo]=computeLocationPV_m(toas, foas, CNRs, SIDs);
+            else
+                [loc,err,antsV,sInfo]=computeLocation(toas, foas, CNRs, SIDs);
+            end
             if ~isempty(loc)
                 if ~isreal(err.EHE)
                     continue;
