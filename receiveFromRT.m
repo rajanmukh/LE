@@ -170,7 +170,7 @@ for di=1:1
             
             
             
-            if nos>=7
+            if nos>=4
                 [loc,err,antsV,sInfo]=computeLocationPV_m(toas, foas, CNRs, SIDs);
             else
                 [loc,err,antsV,sInfo]=computeLocation(toas, foas, CNRs, SIDs);

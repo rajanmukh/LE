@@ -47,7 +47,7 @@ if noOfSats>=3
 
 %     freqOutOfBounds = G(5)<406.01e6 || G(5)>406.09e6;    
 
-    if resd>100        
+    if resd>10        
         errorDetected=true;        
         %try to identify wrong channel
 %         [~,tryOrder] = sort(abs(F(1:noOfChns)),'descend');

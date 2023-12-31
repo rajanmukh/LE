@@ -23,7 +23,7 @@ for i=1:noOfChannels
             G=G-del;
         end
         resd = norm(F);
-        if resd <100
+        if resd <10
             errorEliminated=true;            
             antsV=sel;
             break;

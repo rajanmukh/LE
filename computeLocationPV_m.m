@@ -46,7 +46,7 @@ if noOfSats>=4
 
     freqOutOfBounds = G(8)<406.01e6 || G(8)>406.09e6;    
 
-    if resd>100 || freqOutOfBounds       
+    if resd>10 || freqOutOfBounds       
         errorDetected=true;        
         if noOfSats>=5
             [G,D,antsV,errorEliminated] = tryEliminationPV(satIDs,posS,t,posS1,velS1,fc1,stdtoa,stdfoa);
