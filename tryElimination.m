@@ -1,9 +1,10 @@
-function [G,D,antsV,errorEliminated] = tryElimination(satIDs0,posS0,t0,posS10,velS10,fc10,stdtoa0,stdfoa0)
+function [G,D,antsV,errorEliminated,resd1] = tryElimination(satIDs0,posS0,t0,posS10,velS10,fc10,stdtoa0,stdfoa0)
 noOfChannels=length(satIDs0);
 errorEliminated = false;
 
 G=[];
 D=[];
+resd1=0;
 for i=1:noOfChannels
     sel=ones(1,noOfChannels,'logical');
     sel(i)=false;
@@ -24,9 +25,25 @@ for i=1:noOfChannels
             G=G-del;
         end
         resd = norm(F);
-        if resd <100
+        resd1=norm(F(end-noOfChannels+2:end));
+        if resd <200
             errorEliminated=true;            
             antsV=sel;
+            %recompute
+            adjvar=resd1/0.45;
+            adjvar=1;
+            for j=1:15
+                %     [posS1,dt2]=actualtof2(posS,G(1:3));
+                [F,D]=FDcreator2(posS,t,posS1,velS1,fc1,G,stdtoa,adjvar*stdfoa,noOfChannels-1);
+                %     [F,D]=FDcreator3(posS1,velS1,fc1,G);
+                %     [F,D]=FDcreator1(posS,t,G);
+                del=D\F;
+                %             [del,~,resd]=lscov(D,F);
+                del(4)=del(4)*1e-3;
+                G=G-del;
+            end
+            resd = norm(F);
+            %
             break;
         end        
     end

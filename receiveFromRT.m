@@ -1,9 +1,10 @@
 clear
 for di=1:1
-
+    residuals=zeros(1,3000);
     RxSite=lla2ecef([13.036,77.5124,930])'*1e-3;%Bangalore
     REFID='9C62EE2962AF260';%{'9C62EE2962AF260','3EFC000002FFBFF','3ADEA2223F81FE0','9A22EE29629E2A0','B5FE18FED639240','9C6000000000001','9C7FEC2AACD3590'};
-    %     REFID1=;
+    FoT=406.052000e6;%
+    TxSite=[-20.9088888,55.51361,95];
     dt=datetime(2023,12,20+di-1)
     otherID=true;
     % REFID='347C000000FFBFF';
@@ -167,14 +168,18 @@ for di=1:1
             %             t1=TOT_e(abs(ferr)>1);
             %             terr=1e6*seconds(tr-t1);
             %         end
-            [loc,err,antsV,sInfo]=computeLocation(toas, foas, CNRs, SIDs);
+            delf=addVelocityEffect(SIDs,toas,FoT,TxSite,RxSite);
+            [loc,err,antsV,sInfo]=computeLocation(toas, foas+delf, CNRs, SIDs);
             if ~isempty(loc)
                 if ~isreal(err.EHE)
                     continue;
+                else
+                    residuals(msgno+1)=sInfo.resd;
                 end
             end
             msgno=msgno+1;
             msgno
+            
             %         if strcmp(id,'3ADEA2223F81FE0')
             %             distance(loc.lat,loc.lon,24.431,54.448,referenceEllipsoid('WGS84'))*1e-3
             %             fhf=0;
@@ -225,6 +230,8 @@ for di=1:1
     wrt.close()
     wrtB.close()
     wrtS.close()
+    residuals(residuals==0)=[];
+    save("resdstat1.mat","residuals");
     clear
 end
 generateReport1

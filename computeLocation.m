@@ -29,6 +29,7 @@ fd=getDoppler(posS1,velS1,BANGALORE,fc);
 sInfo.foff=fd;
 fc1=fc-fd-freq_trns;
 sInfo.upFOA=fc1;
+
 noOfSats=length(satIDs);
 if noOfSats>=3    
     G=firstGuess(posS,t);
@@ -44,17 +45,33 @@ if noOfSats>=3
         G=G-del;
     end
     resd = norm(F);
-
+    resd1=norm(F(end-noOfSats+1:end));
+    
     freqOutOfBounds = G(5)<406.01e6 || G(5)>406.09e6;    
 
-    if resd>100 || freqOutOfBounds       
+    if resd>200 || freqOutOfBounds       
         errorDetected=true;        
         %try to identify wrong channel
 %         [~,tryOrder] = sort(abs(F(1:noOfChns)),'descend');
-        [G,D,antsV,errorEliminated] = tryElimination(satIDs,posS,t,posS1,velS1,fc1,stdtoa,stdfoa);        
+        [G,D,antsV,errorEliminated,resd1] = tryElimination(satIDs,posS,t,posS1,velS1,fc1,stdtoa,stdfoa);        
     else        
         errorDetected=false;
         antsV=ones(1,noOfChns,'logical');
+        %recompute
+        adjvar=resd1/0.45;
+        adjvar=1;
+        for i=1:15
+            %     [posS1,dt2]=actualtof2(posS,G(1:3));
+            [F,D]=FDcreatorTD(posS,t,posS1,velS1,fc1,G,stdtoa,adjvar*stdfoa,noOfSats);
+            %     [F,D]=FDcreator3(posS1,velS1,fc1,G);
+            %     [F,D]=FDcreator1(posS,t,G);
+            del=D\F;
+            %         [del,~,resd]=lscov(D,F);
+            del(4)=del(4)*1e-3;
+            G=G-del;
+        end
+        resd = norm(F);
+        %
     end
 
     if ~errorDetected || (errorDetected && errorEliminated)
@@ -85,9 +102,11 @@ if noOfSats>=3
             sInfo.solMethodology = 'P3D-Single';
         end        
     end
+    sInfo.resd=resd1;
 else
     antsV=ones(1,noOfChns,'logical');%consistency cannot be checked for lack of sats
 end
+
 end
 
 
@@ -259,7 +278,7 @@ end
 
 function [terrstd,ferrstd] = estimateMeasError(cbn0)
 terrstd=0.3*4*ones(length(cbn0),1);%(0.3*4*2.^((-cbn0+50)/6))';%0.3*8*ones(length(cbn0),1);
-ferrstd=0.74e-3*0.06*ones(length(cbn0),1);%(0.74e-3*0.1*2.^((-cbn0+50)/6))';%
+ferrstd=1*0.74e-3*0.06*ones(length(cbn0),1);%(0.74e-3*0.1*2.^((-cbn0+50)/6))';%
 end
 
 function t=split2fields(toa)
