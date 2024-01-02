@@ -31,7 +31,23 @@ for i=1:noOfChannels
             antsV=sel;
             %recompute
             adjvar=resd1/0.45;
-            adjvar=1;
+%             adjvar=100;
+            for j=1:15
+                %     [posS1,dt2]=actualtof2(posS,G(1:3));
+                [F,D]=FDcreator2(posS,t,posS1,velS1,fc1,G,stdtoa,adjvar*stdfoa,noOfChannels-1);
+                %     [F,D]=FDcreator3(posS1,velS1,fc1,G);
+                %     [F,D]=FDcreator1(posS,t,G);
+                del=D\F;
+                %             [del,~,resd]=lscov(D,F);
+                del(4)=del(4)*1e-3;
+                G=G-del;
+            end
+            resd = norm(F);
+            resd1=norm(F(end-noOfChannels+2:end))*adjvar;
+            %
+            %recompute
+            adjvar=resd1/0.45;
+            %             adjvar=100;
             for j=1:15
                 %     [posS1,dt2]=actualtof2(posS,G(1:3));
                 [F,D]=FDcreator2(posS,t,posS1,velS1,fc1,G,stdtoa,adjvar*stdfoa,noOfChannels-1);

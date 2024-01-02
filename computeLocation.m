@@ -59,8 +59,7 @@ if noOfSats>=3
         antsV=ones(1,noOfChns,'logical');
         %recompute
         adjvar=resd1/0.45;
-        adjvar=1;
-        for i=1:15
+        for j=1:15
             %     [posS1,dt2]=actualtof2(posS,G(1:3));
             [F,D]=FDcreatorTD(posS,t,posS1,velS1,fc1,G,stdtoa,adjvar*stdfoa,noOfSats);
             %     [F,D]=FDcreator3(posS1,velS1,fc1,G);
@@ -71,6 +70,22 @@ if noOfSats>=3
             G=G-del;
         end
         resd = norm(F);
+        resd1=norm(F(end-noOfSats+1:end))*adjvar;
+        %
+        %recompute
+        adjvar=resd1/0.45;
+        for j=1:15
+            %     [posS1,dt2]=actualtof2(posS,G(1:3));
+            [F,D]=FDcreatorTD(posS,t,posS1,velS1,fc1,G,stdtoa,adjvar*stdfoa,noOfSats);
+            %     [F,D]=FDcreator3(posS1,velS1,fc1,G);
+            %     [F,D]=FDcreator1(posS,t,G);
+            del=D\F;
+            %         [del,~,resd]=lscov(D,F);
+            del(4)=del(4)*1e-3;
+            G=G-del;
+        end
+        resd = norm(F);
+        resd1=norm(F(end-noOfSats+1:end));
         %
     end
 

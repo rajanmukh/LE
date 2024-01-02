@@ -169,7 +169,11 @@ for di=1:1
             %             terr=1e6*seconds(tr-t1);
             %         end
             delf=addVelocityEffect(SIDs,toas,FoT,TxSite,RxSite);
-            [loc,err,antsV,sInfo]=computeLocation(toas, foas+delf, CNRs, SIDs);
+            if nos>=4
+                [loc,err,antsV,sInfo]=computeLocationPV_m(toas, foas+delf, CNRs, SIDs);
+            else
+                [loc,err,antsV,sInfo]=computeLocation(toas, foas+delf, CNRs, SIDs);
+            end
             if ~isempty(loc)
                 if ~isreal(err.EHE)
                     continue;
