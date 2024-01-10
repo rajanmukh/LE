@@ -174,6 +174,8 @@ for di=1:1
             else
                 [loc,err,antsV,sInfo]=computeLocation(toas, foas+delf, CNRs, SIDs);
             end
+
+
             if ~isempty(loc)
                 if ~isreal(err.EHE)
                     continue;

@@ -1,7 +1,7 @@
 function [G,D,antsV,errorEliminated,resd1] = tryElimination(satIDs0,posS0,t0,posS10,velS10,fc10,stdtoa0,stdfoa0)
 noOfChannels=length(satIDs0);
 errorEliminated = false;
-
+resd0=0.6;
 G=[];
 D=[];
 resd1=0;
@@ -30,7 +30,7 @@ for i=1:noOfChannels
             errorEliminated=true;            
             antsV=sel;
             %recompute
-            adjvar=resd1/0.45;
+            adjvar=resd1/resd0;
 %             adjvar=100;
             for j=1:15
                 %     [posS1,dt2]=actualtof2(posS,G(1:3));
@@ -46,7 +46,7 @@ for i=1:noOfChannels
             resd1=norm(F(end-noOfChannels+2:end))*adjvar;
             %
             %recompute
-            adjvar=resd1/0.45;
+            adjvar=resd1/resd0;
             %             adjvar=100;
             for j=1:15
                 %     [posS1,dt2]=actualtof2(posS,G(1:3));

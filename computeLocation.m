@@ -48,7 +48,7 @@ if noOfSats>=3
     resd1=norm(F(end-noOfSats+1:end));
     
     freqOutOfBounds = G(5)<406.01e6 || G(5)>406.09e6;    
-
+    resd0=0.6;
     if resd>200 || freqOutOfBounds       
         errorDetected=true;        
         %try to identify wrong channel
@@ -58,7 +58,7 @@ if noOfSats>=3
         errorDetected=false;
         antsV=ones(1,noOfChns,'logical');
         %recompute
-        adjvar=resd1/0.45;
+        adjvar=resd1/resd0;
         for j=1:15
             %     [posS1,dt2]=actualtof2(posS,G(1:3));
             [F,D]=FDcreatorTD(posS,t,posS1,velS1,fc1,G,stdtoa,adjvar*stdfoa,noOfSats);
@@ -73,7 +73,7 @@ if noOfSats>=3
         resd1=norm(F(end-noOfSats+1:end))*adjvar;
         %
         %recompute
-        adjvar=resd1/0.45;
+        adjvar=resd1/resd0;
         for j=1:15
             %     [posS1,dt2]=actualtof2(posS,G(1:3));
             [F,D]=FDcreatorTD(posS,t,posS1,velS1,fc1,G,stdtoa,adjvar*stdfoa,noOfSats);
